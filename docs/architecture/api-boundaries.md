@@ -48,6 +48,38 @@
 
 Response: `{ "status": "ok", "timestamp": "2024-01-01T00:00:00.000Z" }`
 
+### Create account
+
+`POST /players`
+
+Request body:
+
+```json
+{
+  "playerId": "player-abc",
+  "themeId": "generic",
+  "idempotencyKey": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+Response (201): `PlayerStateDto` wrapped in `ApiResponse`
+
+Error codes: `THEME_NOT_FOUND`, `PLAYER_ALREADY_EXISTS`
+
+### List themes
+
+`GET /themes`
+
+Response: Array of `ThemeSummaryDto` (`id`, `name`, `description`)
+
+### Get theme
+
+`GET /themes/:themeId`
+
+Response: `ThemeDto` with generators, upgrades, and economy constants
+
+Error codes: `THEME_NOT_FOUND`
+
 ### Get player state
 
 `GET /players/:playerId`
@@ -142,11 +174,12 @@ All state-changing commands require an `idempotencyKey` (UUID). Duplicate keys r
 
 ## HTTP status codes
 
-| Code | Meaning                                              |
-| ---- | ---------------------------------------------------- |
-| 200  | Success                                              |
-| 400  | Validation error                                     |
-| 404  | Resource not found                                   |
-| 409  | Conflict (duplicate, concurrency, already purchased) |
-| 422  | Business rule violation (insufficient funds, etc.)   |
-| 500  | Unexpected server error                              |
+| Code | Meaning                                                             |
+| ---- | ------------------------------------------------------------------- |
+| 200  | Success                                                             |
+| 201  | Created (new account)                                               |
+| 400  | Validation error                                                    |
+| 404  | Resource not found (player, theme, upgrade, event, reward)          |
+| 409  | Conflict (duplicate, concurrency, already purchased/exists)         |
+| 422  | Business rule violation (insufficient funds, etc.)                  |
+| 500  | Unexpected server error                                             |
