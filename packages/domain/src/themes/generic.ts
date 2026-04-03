@@ -41,7 +41,7 @@ export const genericTheme: GameTheme = {
     {
       id: asUpgradeId('upgrade-efficiency-1'),
       name: 'Efficiency I',
-      description: 'Boosts the Small Generator output by 0.5×.',
+      description: 'Adds +0.5× to the Small Generator multiplier.',
       cost: 100n,
       targetGeneratorId: asGeneratorId('gen-small'),
       multiplierBonusScaled: 500n,
@@ -49,7 +49,7 @@ export const genericTheme: GameTheme = {
     {
       id: asUpgradeId('upgrade-efficiency-2'),
       name: 'Efficiency II',
-      description: 'Boosts the Medium Generator output by 0.5×.',
+      description: 'Adds +0.5× to the Medium Generator multiplier.',
       cost: 500n,
       targetGeneratorId: asGeneratorId('gen-medium'),
       multiplierBonusScaled: 500n,
@@ -57,7 +57,7 @@ export const genericTheme: GameTheme = {
     {
       id: asUpgradeId('upgrade-efficiency-3'),
       name: 'Efficiency III',
-      description: 'Boosts the Large Generator output by 0.5×.',
+      description: 'Adds +0.5× to the Large Generator multiplier.',
       cost: 2500n,
       targetGeneratorId: asGeneratorId('gen-large'),
       multiplierBonusScaled: 500n,
@@ -65,7 +65,7 @@ export const genericTheme: GameTheme = {
     {
       id: asUpgradeId('upgrade-efficiency-4'),
       name: 'Efficiency IV',
-      description: 'Boosts the Mega Generator output by 0.5×.',
+      description: 'Adds +0.5× to the Mega Generator multiplier.',
       cost: 10000n,
       targetGeneratorId: asGeneratorId('gen-mega'),
       multiplierBonusScaled: 500n,

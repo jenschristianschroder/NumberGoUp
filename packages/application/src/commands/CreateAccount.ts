@@ -22,7 +22,7 @@ export interface CreateAccountResult {
 }
 
 /**
- * Create a new player account initialised from a game theme.
+ * Create a new player account initialized from a game theme.
  *
  * Idempotency: if the player already exists and the idempotency key matches,
  * the existing state is returned silently. If the player exists but the key
