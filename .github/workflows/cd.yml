@@ -1,0 +1,421 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/numbergoUp
+
+jobs:
+  # ─── CI gate ──────────────────────────────────────────────────────────────────
+  ci:
+    name: Lint, Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck (contracts)
+        working-directory: packages/contracts
+        run: npm run typecheck
+
+      - name: Build (domain)
+        working-directory: packages/domain
+        run: npm run build
+
+      - name: Typecheck (domain)
+        working-directory: packages/domain
+        run: npm run typecheck
+
+      - name: Typecheck (application)
+        working-directory: packages/application
+        run: npm run typecheck
+
+      - name: Test (domain)
+        working-directory: packages/domain
+        run: npm test
+
+      - name: Test (application)
+        working-directory: packages/application
+        run: npm test
+
+      - name: Test (api)
+        working-directory: apps/api
+        run: npm test
+
+  # ─── Build & push container images ───────────────────────────────────────────
+  build-images:
+    name: Build & Push Images
+    needs: ci
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [api, worker]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_BASE }}/${{ matrix.app }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─── Deploy infrastructure (dev) ─────────────────────────────────────────────
+  deploy-infra-dev:
+    name: Deploy Infrastructure (dev)
+    needs: build-images
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
+    runs-on: ubuntu-latest
+    environment: dev
+    outputs:
+      api-app-name: ${{ steps.deploy.outputs.apiAppName }}
+      worker-app-name: ${{ steps.deploy.outputs.workerAppName }}
+      api-url: ${{ steps.deploy.outputs.apiUrl }}
+      resource-group: rg-numbergoUp-dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group exists
+        run: |
+          az group create \
+            --name rg-numbergoUp-dev \
+            --location eastus \
+            --tags project=NumberGoUp environment=dev
+
+      - name: Deploy Bicep
+        id: deploy
+        run: |
+          result=$(az deployment group create \
+            --resource-group rg-numbergoUp-dev \
+            --template-file infra/bicep/main.bicep \
+            --parameters \
+              environmentName=dev \
+              postgresAdminPassword='${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
+            --query 'properties.outputs' \
+            --output json)
+          echo "apiUrl=$(echo "$result" | jq -r '.apiUrl.value')" >> "$GITHUB_OUTPUT"
+          echo "apiAppName=ngu-dev-api" >> "$GITHUB_OUTPUT"
+          echo "workerAppName=ngu-dev-worker" >> "$GITHUB_OUTPUT"
+
+  # ─── Run database migrations (dev) ──────────────────────────────────────────
+  run-migrations-dev:
+    name: Run Migrations (dev)
+    needs: deploy-infra-dev
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run SQL migrations
+        run: |
+          # Enable firewall rule for runner IP
+          runner_ip=$(curl -s https://api.ipify.org)
+          az postgres flexible-server firewall-rule create \
+            --resource-group rg-numbergoUp-dev \
+            --name ngu-dev-pg \
+            --rule-name github-runner \
+            --start-ip-address "$runner_ip" \
+            --end-ip-address "$runner_ip"
+
+          # Apply all migration files in order
+          for migration in packages/infrastructure/src/postgres/migrations/*.sql; do
+            echo "Applying migration: $migration"
+            az postgres flexible-server execute \
+              --name ngu-dev-pg \
+              --resource-group rg-numbergoUp-dev \
+              --admin-user ngu_admin \
+              --admin-password '${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
+              --database-name numbergoUp \
+              --file-path "$migration"
+          done
+
+          # Remove firewall rule
+          az postgres flexible-server firewall-rule delete \
+            --resource-group rg-numbergoUp-dev \
+            --name ngu-dev-pg \
+            --rule-name github-runner \
+            --yes
+
+  # ─── Deploy apps (dev) ───────────────────────────────────────────────────────
+  deploy-apps-dev:
+    name: Deploy Apps (dev)
+    needs: [build-images, deploy-infra-dev, run-migrations-dev]
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: ${{ needs.deploy-infra-dev.outputs.api-url }}
+    steps:
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Determine image tag
+        id: tag
+        run: echo "sha=sha-$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy API
+        run: |
+          az containerapp update \
+            --name ${{ needs.deploy-infra-dev.outputs.api-app-name }} \
+            --resource-group ${{ needs.deploy-infra-dev.outputs.resource-group }} \
+            --image "${{ env.IMAGE_BASE }}/api:${{ steps.tag.outputs.sha }}"
+
+      - name: Deploy Worker
+        run: |
+          az containerapp update \
+            --name ${{ needs.deploy-infra-dev.outputs.worker-app-name }} \
+            --resource-group ${{ needs.deploy-infra-dev.outputs.resource-group }} \
+            --image "${{ env.IMAGE_BASE }}/worker:${{ steps.tag.outputs.sha }}"
+
+  # ─── Smoke test (dev) ───────────────────────────────────────────────────────
+  smoke-test-dev:
+    name: Smoke Test (dev)
+    needs: [deploy-apps-dev, deploy-infra-dev]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health check
+        run: |
+          API_URL="${{ needs.deploy-infra-dev.outputs.api-url }}"
+          echo "Checking health at $API_URL/health ..."
+          # Retry up to 5 times with 15s interval
+          for i in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/health" || true)
+            echo "Attempt $i: HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Health check passed."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Health check failed after 5 attempts."
+          exit 1
+
+  # ─── Deploy infrastructure (prod) ──────────────────────────────────────────
+  deploy-infra-prod:
+    name: Deploy Infrastructure (prod)
+    needs: [smoke-test-dev, build-images]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod')
+    runs-on: ubuntu-latest
+    environment: prod
+    outputs:
+      api-app-name: ${{ steps.deploy.outputs.apiAppName }}
+      worker-app-name: ${{ steps.deploy.outputs.workerAppName }}
+      api-url: ${{ steps.deploy.outputs.apiUrl }}
+      resource-group: rg-numbergoUp-prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group exists
+        run: |
+          az group create \
+            --name rg-numbergoUp-prod \
+            --location eastus \
+            --tags project=NumberGoUp environment=prod
+
+      - name: Deploy Bicep
+        id: deploy
+        run: |
+          result=$(az deployment group create \
+            --resource-group rg-numbergoUp-prod \
+            --template-file infra/bicep/main.bicep \
+            --parameters \
+              environmentName=prod \
+              postgresAdminPassword='${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
+            --query 'properties.outputs' \
+            --output json)
+          echo "apiUrl=$(echo "$result" | jq -r '.apiUrl.value')" >> "$GITHUB_OUTPUT"
+          echo "apiAppName=ngu-prod-api" >> "$GITHUB_OUTPUT"
+          echo "workerAppName=ngu-prod-worker" >> "$GITHUB_OUTPUT"
+
+  # ─── Run database migrations (prod) ─────────────────────────────────────────
+  run-migrations-prod:
+    name: Run Migrations (prod)
+    needs: deploy-infra-prod
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run SQL migrations
+        run: |
+          runner_ip=$(curl -s https://api.ipify.org)
+          az postgres flexible-server firewall-rule create \
+            --resource-group rg-numbergoUp-prod \
+            --name ngu-prod-pg \
+            --rule-name github-runner \
+            --start-ip-address "$runner_ip" \
+            --end-ip-address "$runner_ip"
+
+          for migration in packages/infrastructure/src/postgres/migrations/*.sql; do
+            echo "Applying migration: $migration"
+            az postgres flexible-server execute \
+              --name ngu-prod-pg \
+              --resource-group rg-numbergoUp-prod \
+              --admin-user ngu_admin \
+              --admin-password '${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
+              --database-name numbergoUp \
+              --file-path "$migration"
+          done
+
+          az postgres flexible-server firewall-rule delete \
+            --resource-group rg-numbergoUp-prod \
+            --name ngu-prod-pg \
+            --rule-name github-runner \
+            --yes
+
+  # ─── Deploy apps (prod) ─────────────────────────────────────────────────────
+  deploy-apps-prod:
+    name: Deploy Apps (prod)
+    needs: [build-images, deploy-infra-prod, run-migrations-prod]
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: ${{ needs.deploy-infra-prod.outputs.api-url }}
+    steps:
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Determine image tag
+        id: tag
+        run: echo "sha=sha-$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy API
+        run: |
+          az containerapp update \
+            --name ${{ needs.deploy-infra-prod.outputs.api-app-name }} \
+            --resource-group ${{ needs.deploy-infra-prod.outputs.resource-group }} \
+            --image "${{ env.IMAGE_BASE }}/api:${{ steps.tag.outputs.sha }}"
+
+      - name: Deploy Worker
+        run: |
+          az containerapp update \
+            --name ${{ needs.deploy-infra-prod.outputs.worker-app-name }} \
+            --resource-group ${{ needs.deploy-infra-prod.outputs.resource-group }} \
+            --image "${{ env.IMAGE_BASE }}/worker:${{ steps.tag.outputs.sha }}"
+
+  # ─── Smoke test (prod) ──────────────────────────────────────────────────────
+  smoke-test-prod:
+    name: Smoke Test (prod)
+    needs: [deploy-apps-prod, deploy-infra-prod]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health check
+        run: |
+          API_URL="${{ needs.deploy-infra-prod.outputs.api-url }}"
+          echo "Checking health at $API_URL/health ..."
+          for i in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/health" || true)
+            echo "Attempt $i: HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Health check passed."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Health check failed after 5 attempts."
+          exit 1

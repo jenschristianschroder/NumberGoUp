@@ -1,0 +1,86 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      image-tag:
+        description: 'Image tag to roll back to (e.g. sha-abc1234 or v1.2.3)'
+        required: true
+        type: string
+      apps:
+        description: 'Which apps to roll back'
+        required: true
+        type: choice
+        default: 'both'
+        options:
+          - both
+          - api
+          - worker
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/numbergoUp
+
+jobs:
+  rollback:
+    name: Rollback (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set resource group
+        id: rg
+        run: echo "name=rg-numbergoUp-${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+
+      - name: Rollback API
+        if: inputs.apps == 'both' || inputs.apps == 'api'
+        run: |
+          az containerapp update \
+            --name ngu-${{ inputs.environment }}-api \
+            --resource-group ${{ steps.rg.outputs.name }} \
+            --image "${{ env.IMAGE_BASE }}/api:${{ inputs.image-tag }}"
+
+      - name: Rollback Worker
+        if: inputs.apps == 'both' || inputs.apps == 'worker'
+        run: |
+          az containerapp update \
+            --name ngu-${{ inputs.environment }}-worker \
+            --resource-group ${{ steps.rg.outputs.name }} \
+            --image "${{ env.IMAGE_BASE }}/worker:${{ inputs.image-tag }}"
+
+      - name: Verify API health
+        if: inputs.apps == 'both' || inputs.apps == 'api'
+        run: |
+          fqdn=$(az containerapp show \
+            --name ngu-${{ inputs.environment }}-api \
+            --resource-group ${{ steps.rg.outputs.name }} \
+            --query 'properties.configuration.ingress.fqdn' \
+            --output tsv)
+          echo "Checking health at https://$fqdn/health ..."
+          for i in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "https://$fqdn/health" || true)
+            echo "Attempt $i: HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Health check passed."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Health check failed after 5 attempts."
+          exit 1
