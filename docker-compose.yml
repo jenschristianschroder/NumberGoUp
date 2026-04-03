@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ngu_admin
+      POSTGRES_PASSWORD: localdev
+      POSTGRES_DB: numbergoUp
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/infrastructure/src/postgres/migrations:/docker-entrypoint-initdb.d
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://ngu_admin:localdev@postgres:5432/numbergoUp
+      DATABASE_SSL: 'false'
+      NODE_ENV: development
+      LOG_LEVEL: debug
+    depends_on:
+      - postgres
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://ngu_admin:localdev@postgres:5432/numbergoUp
+      SERVICE_BUS_CONNECTION_STRING: ${SERVICE_BUS_CONNECTION_STRING:-}
+      SERVICE_BUS_QUEUE: player-commands
+      NODE_ENV: development
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
