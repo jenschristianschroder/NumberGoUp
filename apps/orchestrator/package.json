@@ -1,0 +1,15 @@
+{
+  "name": "@numbergoUp/orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "func start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@numbergoUp/contracts": "*",
+    "durable-functions": "^3.3.0",
+    "@azure/functions": "^4.5.0"
+  }
+}
