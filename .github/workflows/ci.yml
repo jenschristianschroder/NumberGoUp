@@ -36,6 +36,10 @@ jobs:
         working-directory: packages/contracts
         run: npm run typecheck
 
+      - name: Build (domain)
+        working-directory: packages/domain
+        run: npm run build
+
       - name: Typecheck (domain)
         working-directory: packages/domain
         run: npm run typecheck
