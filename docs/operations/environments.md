@@ -39,12 +39,12 @@ Push to main → CI (lint/test) → Build & push images → Deploy dev → Smoke
 
 ### Required GitHub repository secrets
 
-| Secret                    | Description                                     | Environment |
-| ------------------------- | ----------------------------------------------- | ----------- |
-| `AZURE_CLIENT_ID`         | Azure AD app registration client ID (OIDC)      | Both        |
-| `AZURE_TENANT_ID`         | Azure AD tenant ID                              | Both        |
-| `AZURE_SUBSCRIPTION_ID`   | Azure subscription ID                           | Both        |
-| `POSTGRES_ADMIN_PASSWORD` | PostgreSQL administrator password                | Both        |
+| Secret                    | Description                                | Environment |
+| ------------------------- | ------------------------------------------ | ----------- |
+| `AZURE_CLIENT_ID`         | Azure AD app registration client ID (OIDC) | Both        |
+| `AZURE_TENANT_ID`         | Azure AD tenant ID                         | Both        |
+| `AZURE_SUBSCRIPTION_ID`   | Azure subscription ID                      | Both        |
+| `POSTGRES_ADMIN_PASSWORD` | PostgreSQL administrator password          | Both        |
 
 ### Required GitHub environments
 
@@ -84,16 +84,16 @@ npm run dev --workspace=apps/api
 
 ## Environment variables
 
-| Variable                        | Description                             | Required    |
-| ------------------------------- | --------------------------------------- | ----------- |
-| `DATABASE_URL`                  | PostgreSQL connection string            | Yes         |
-| `DATABASE_SSL`                  | Set to `true` in Azure                  | No          |
-| `SERVICE_BUS_CONNECTION_STRING` | Service Bus connection                  | Worker only |
-| `SERVICE_BUS_QUEUE`             | Queue name (default: `player-commands`) | Worker only |
-| `PORT`                          | API listen port (default: 3000)         | No          |
-| `LOG_LEVEL`                     | Fastify log level (default: info)       | No          |
-| `KEY_VAULT_URI`                 | Azure Key Vault URI                     | Production  |
-| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Application Insights connection string | Production |
+| Variable                                | Description                             | Required    |
+| --------------------------------------- | --------------------------------------- | ----------- |
+| `DATABASE_URL`                          | PostgreSQL connection string            | Yes         |
+| `DATABASE_SSL`                          | Set to `true` in Azure                  | No          |
+| `SERVICE_BUS_CONNECTION_STRING`         | Service Bus connection                  | Worker only |
+| `SERVICE_BUS_QUEUE`                     | Queue name (default: `player-commands`) | Worker only |
+| `PORT`                                  | API listen port (default: 3000)         | No          |
+| `LOG_LEVEL`                             | Fastify log level (default: info)       | No          |
+| `KEY_VAULT_URI`                         | Azure Key Vault URI                     | Production  |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Application Insights connection string  | Production  |
 
 ## Notes
 
