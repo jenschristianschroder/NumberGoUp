@@ -89,6 +89,17 @@ module containerEnv 'modules/container-env.bicep' = {
   }
 }
 
+// ─── Monitoring ───────────────────────────────────────────────────────────────
+
+module monitoring 'modules/monitoring.bicep' = {
+  name: 'monitoring'
+  params: {
+    prefix: prefix
+    location: location
+    tags: tags
+  }
+}
+
 // ─── API App ──────────────────────────────────────────────────────────────────
 
 module apiApp 'modules/api-app.bicep' = {
@@ -101,6 +112,7 @@ module apiApp 'modules/api-app.bicep' = {
     managedIdentityId: identity.outputs.identityId
     databaseUrl: postgres.outputs.connectionString
     keyVaultUri: keyVault.outputs.uri
+    appInsightsConnectionString: monitoring.outputs.connectionString
   }
 }
 
@@ -117,17 +129,7 @@ module workerApp 'modules/worker-app.bicep' = {
     databaseUrl: postgres.outputs.connectionString
     serviceBusConnectionString: serviceBus.outputs.connectionString
     keyVaultUri: keyVault.outputs.uri
-  }
-}
-
-// ─── Monitoring ───────────────────────────────────────────────────────────────
-
-module monitoring 'modules/monitoring.bicep' = {
-  name: 'monitoring'
-  params: {
-    prefix: prefix
-    location: location
-    tags: tags
+    appInsightsConnectionString: monitoring.outputs.connectionString
   }
 }
 

@@ -7,6 +7,9 @@ param databaseUrl string
 param serviceBusConnectionString string
 param keyVaultUri string
 
+@description('Application Insights connection string for telemetry')
+param appInsightsConnectionString string = ''
+
 @description('Container image to deploy (format: registry/image:tag)')
 param imageName string = 'ghcr.io/jenschristianschroder/numbergoUp/worker:latest'
 
@@ -56,6 +59,10 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'KEY_VAULT_URI'
               value: keyVaultUri
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: appInsightsConnectionString
             }
           ]
           resources: {
