@@ -4,9 +4,6 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "references": [
-    { "path": "../../packages/domain" },
-    { "path": "../../packages/application" }
-  ],
+  "references": [{ "path": "../../packages/domain" }, { "path": "../../packages/application" }],
   "include": ["src"]
 }

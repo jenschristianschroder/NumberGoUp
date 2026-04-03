@@ -15,11 +15,11 @@ All intermediate values use `bigint`. Multipliers are stored scaled ×1000.
 
 ## Multiplier composition
 
-| Source | Storage | Example |
-|--------|---------|---------|
-| Generator base | `multiplierScaled` on Generator | `1000` = 1× |
-| Upgrade bonus | `multiplierBonusScaled` on Upgrade | `500` = +0.5× |
-| Timed boost | `multiplierScaled` on TimedBoost | `1000` = +1× |
+| Source         | Storage                                        | Example                    |
+| -------------- | ---------------------------------------------- | -------------------------- |
+| Generator base | `multiplierScaled` on Generator                | `1000` = 1×                |
+| Upgrade bonus  | `multiplierBonusScaled` on Upgrade             | `500` = +0.5×              |
+| Timed boost    | `multiplierScaled` on TimedBoost               | `1000` = +1×               |
 | Prestige bonus | `permanentMultiplierScaled` on MetaProgression | `100` = +0.1× per prestige |
 
 ## Offline earnings cap
@@ -36,12 +36,12 @@ This prevents abuse and caps storage of unbounded values.
 
 ## Key functions
 
-| Function | Location |
-|----------|----------|
-| `computeOfflineEarnings` | `packages/domain/src/EconomyService.ts` |
-| `applyMetaMultiplier` | `packages/domain/src/EconomyService.ts` |
-| `applyCurrencyMultiplier` | `packages/domain/src/valueObjects/Currency.ts` |
-| `computePrestigeBonus` | `packages/domain/src/models/MetaProgression.ts` |
+| Function                  | Location                                        |
+| ------------------------- | ----------------------------------------------- |
+| `computeOfflineEarnings`  | `packages/domain/src/EconomyService.ts`         |
+| `applyMetaMultiplier`     | `packages/domain/src/EconomyService.ts`         |
+| `applyCurrencyMultiplier` | `packages/domain/src/valueObjects/Currency.ts`  |
+| `computePrestigeBonus`    | `packages/domain/src/models/MetaProgression.ts` |
 
 ## Invariants
 

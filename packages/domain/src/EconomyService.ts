@@ -40,10 +40,7 @@ export function computeOfflineEarnings(
 /**
  * Apply the meta-progression permanent multiplier on top of earnings.
  */
-export function applyMetaMultiplier(
-  earned: Currency,
-  permanentMultiplierScaled: bigint,
-): Currency {
+export function applyMetaMultiplier(earned: Currency, permanentMultiplierScaled: bigint): Currency {
   // 1000 base + permanentMultiplierScaled
   return applyCurrencyMultiplier(earned, 1000n + permanentMultiplierScaled);
 }
@@ -51,7 +48,11 @@ export function applyMetaMultiplier(
 /**
  * Compute the total output per second for a run (sum of all generators).
  */
-export function totalOutputPerSecond(generators: Generator[], boosts: TimedBoost[], now: Date): Currency {
+export function totalOutputPerSecond(
+  generators: Generator[],
+  boosts: TimedBoost[],
+  now: Date,
+): Currency {
   const boostMultiplier = combinedBoostMultiplierScaled(boosts, now);
   const effectiveMultiplierScaled = 1000n + boostMultiplier;
 

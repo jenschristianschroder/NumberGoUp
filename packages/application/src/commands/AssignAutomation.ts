@@ -1,8 +1,5 @@
 import type { PlayerAccount } from '@numbergoUp/domain';
-import {
-  PlayerNotFoundError,
-  GeneratorNotFoundError,
-} from '@numbergoUp/domain';
+import { PlayerNotFoundError, GeneratorNotFoundError } from '@numbergoUp/domain';
 import type { PlayerRepository } from '../ports/PlayerRepository.js';
 import type { Clock } from '../ports/Clock.js';
 

@@ -39,6 +39,7 @@ Client (mobile/web)
 ## Layers
 
 ### Domain (`packages/domain`)
+
 - Pure TypeScript types and functions.
 - No I/O, no framework dependencies.
 - Models: `PlayerAccount`, `RunState`, `Generator`, `Upgrade`, `Automation`, `MetaProgression`, `TimedBoost`, `LiveEvent`, `RewardClaim`.
@@ -47,26 +48,31 @@ Client (mobile/web)
 - Domain errors with stable codes.
 
 ### Application (`packages/application`)
+
 - Command handlers (use cases).
 - Port interfaces (`PlayerRepository`, `LiveEventRepository`, `Clock`).
 - Depends only on domain.
 
 ### Infrastructure (`packages/infrastructure`)
+
 - Implements application ports.
 - `PostgresPlayerRepository` – full player state CRUD with optimistic concurrency.
 - SQL migrations in `src/postgres/migrations/`.
 
 ### API (`apps/api`)
+
 - Fastify HTTP server.
 - Thin route handlers: validate input (Zod) → call command handler → map to DTO → return.
 - No business logic in routes.
 
 ### Worker (`apps/worker`)
+
 - Consumes Service Bus messages from `player-commands` queue.
 - `MessageProcessor` routes messages to command handlers.
 - Dead-letters on domain errors; abandons on transient errors.
 
 ### Orchestrator (`apps/orchestrator`)
+
 - Durable Functions for stateful workflows.
 - `ScheduledRewardOrchestrator`: waits for event end, fans out reward claims.
 

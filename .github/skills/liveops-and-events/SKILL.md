@@ -10,8 +10,8 @@ NumberGoUp supports time-boxed live events with claimable rewards. Events are se
 interface LiveEvent {
   id: EventId;
   name: string;
-  startsAt: Date;  // UTC
-  endsAt: Date;    // UTC
+  startsAt: Date; // UTC
+  endsAt: Date; // UTC
   rewards: EventReward[];
 }
 ```
@@ -29,6 +29,7 @@ Events are loaded from config/blob storage (read-only at runtime).
 ## Orchestrated reward distribution
 
 Use `apps/orchestrator/src/ScheduledRewardOrchestrator.ts` for bulk reward distribution:
+
 1. HTTP trigger starts `ScheduledRewardOrchestrator` with event end time
 2. Orchestrator waits via durable timer until event ends
 3. Fans out to `EnqueueRewardClaim` activity for each eligible player

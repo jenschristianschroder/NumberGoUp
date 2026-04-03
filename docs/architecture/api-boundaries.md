@@ -54,21 +54,22 @@ Response: `{ "status": "ok", "timestamp": "2024-01-01T00:00:00.000Z" }`
 
 Response: `PlayerStateDto` (see `packages/contracts/src/index.ts`)
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `currency` | `string` | Integer string |
-| `generators` | `GeneratorDto[]` | |
-| `upgrades` | `UpgradeDto[]` | |
-| `automations` | `AutomationDto[]` | |
-| `meta` | `MetaProgressionDto` | |
-| `lastTickAt` | `string` | ISO-8601 UTC |
-| `version` | `number` | Concurrency token |
+| Field         | Type                 | Notes             |
+| ------------- | -------------------- | ----------------- |
+| `currency`    | `string`             | Integer string    |
+| `generators`  | `GeneratorDto[]`     |                   |
+| `upgrades`    | `UpgradeDto[]`       |                   |
+| `automations` | `AutomationDto[]`    |                   |
+| `meta`        | `MetaProgressionDto` |                   |
+| `lastTickAt`  | `string`             | ISO-8601 UTC      |
+| `version`     | `number`             | Concurrency token |
 
 ### Buy upgrade
 
 `POST /players/:playerId/upgrades/buy`
 
 Request body:
+
 ```json
 {
   "upgradeId": "upgrade-speed-1",
@@ -85,6 +86,7 @@ Error codes: `PLAYER_NOT_FOUND`, `UPGRADE_NOT_FOUND`, `UPGRADE_ALREADY_PURCHASED
 `POST /players/:playerId/offline-earnings/claim`
 
 Request body:
+
 ```json
 { "idempotencyKey": "..." }
 ```
@@ -96,6 +98,7 @@ Response: `ClaimOfflineEarningsResponse`
 `POST /players/:playerId/prestige`
 
 Request body:
+
 ```json
 { "idempotencyKey": "..." }
 ```
@@ -109,6 +112,7 @@ Error codes: `PRESTIGE_THRESHOLD_NOT_MET`
 `POST /players/:playerId/automations/assign`
 
 Request body:
+
 ```json
 {
   "generatorId": "gen-1",
@@ -121,6 +125,7 @@ Request body:
 `POST /players/:playerId/rewards/claim`
 
 Request body:
+
 ```json
 {
   "eventId": "event-spring-2024",
@@ -137,11 +142,11 @@ All state-changing commands require an `idempotencyKey` (UUID). Duplicate keys r
 
 ## HTTP status codes
 
-| Code | Meaning |
-|------|---------|
-| 200 | Success |
-| 400 | Validation error |
-| 404 | Resource not found |
-| 409 | Conflict (duplicate, concurrency, already purchased) |
-| 422 | Business rule violation (insufficient funds, etc.) |
-| 500 | Unexpected server error |
+| Code | Meaning                                              |
+| ---- | ---------------------------------------------------- |
+| 200  | Success                                              |
+| 400  | Validation error                                     |
+| 404  | Resource not found                                   |
+| 409  | Conflict (duplicate, concurrency, already purchased) |
+| 422  | Business rule violation (insufficient funds, etc.)   |
+| 500  | Unexpected server error                              |

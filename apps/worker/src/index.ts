@@ -10,8 +10,12 @@ const QUEUE_NAME = process.env.SERVICE_BUS_QUEUE ?? 'player-commands';
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
 
 class StubLiveEventRepository implements LiveEventRepository {
-  async findById(_eventId: string): Promise<LiveEvent | null> { return null; }
-  async listActive(_now: Date): Promise<LiveEvent[]> { return []; }
+  async findById(_eventId: string): Promise<LiveEvent | null> {
+    return null;
+  }
+  async listActive(_now: Date): Promise<LiveEvent[]> {
+    return [];
+  }
 }
 
 async function main() {

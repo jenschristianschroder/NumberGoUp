@@ -1,5 +1,5 @@
 ---
-applyTo: "infra/**"
+applyTo: 'infra/**'
 ---
 
 # Infrastructure instructions
@@ -23,6 +23,7 @@ applyTo: "infra/**"
 ## Naming
 
 Resources follow the pattern `${prefix}-<resource-type>`:
+
 - `ngu-dev-api` – API Container App
 - `ngu-dev-worker` – Worker Container App
 - `ngu-dev-pg` – PostgreSQL server

@@ -7,6 +7,7 @@
 NumberGoUp is the backend platform for an idle tycoon game. Players accumulate currency through generators, buy upgrades, participate in live events, and can prestige to earn permanent bonuses.
 
 The backend is designed for:
+
 - **Server-authoritative validation** – the server never trusts client-supplied balances or timestamps.
 - **Offline earnings** – computed deterministically when the player reconnects, not simulated continuously.
 - **Live ops** – seasonal events, timed boosts, and reward orchestration.
@@ -68,12 +69,12 @@ docs/
 
 ## Key design decisions
 
-| Decision | Choice | ADR |
-|----------|--------|-----|
-| Runtime | Azure Container Apps | [ADR-0001](docs/architecture/decisions/0001-runtime-container-apps.md) |
-| State storage | PostgreSQL | [ADR-0002](docs/architecture/decisions/0002-state-postgres.md) |
-| Async messaging | Azure Service Bus | [ADR-0003](docs/architecture/decisions/0003-async-service-bus.md) |
-| Workflows | Durable Functions | [ADR-0004](docs/architecture/decisions/0004-workflows-durable-functions.md) |
+| Decision        | Choice               | ADR                                                                         |
+| --------------- | -------------------- | --------------------------------------------------------------------------- |
+| Runtime         | Azure Container Apps | [ADR-0001](docs/architecture/decisions/0001-runtime-container-apps.md)      |
+| State storage   | PostgreSQL           | [ADR-0002](docs/architecture/decisions/0002-state-postgres.md)              |
+| Async messaging | Azure Service Bus    | [ADR-0003](docs/architecture/decisions/0003-async-service-bus.md)           |
+| Workflows       | Durable Functions    | [ADR-0004](docs/architecture/decisions/0004-workflows-durable-functions.md) |
 
 ## Documentation
 

@@ -7,6 +7,7 @@ Accepted
 ## Context
 
 Player state requires:
+
 - Strong consistency and ACID transactions (currency and inventory changes)
 - Optimistic concurrency for high-throughput updates
 - Efficient JSON storage for semi-structured data (generators, upgrades arrays)
@@ -20,6 +21,7 @@ Use **Azure Database for PostgreSQL Flexible Server** as the primary datastore.
 ## Consequences
 
 **Positive:**
+
 - Full ACID support – safe for currency mutations.
 - JSONB columns for generator/upgrade arrays (flexible schema, indexed if needed).
 - Native `TIMESTAMPTZ` for UTC-correct timestamp storage.
@@ -28,6 +30,7 @@ Use **Azure Database for PostgreSQL Flexible Server** as the primary datastore.
 - Open-source – portable to other clouds or self-hosted.
 
 **Negative:**
+
 - Requires connection pooling for high-concurrency workloads (PgBouncer or built-in pooling).
 - Schema migrations require a migration runner (not included in scaffold – use `psql`, `flyway`, or `node-pg-migrate`).
 - Not serverless – minimum cost even at zero load (use Burstable tier for dev).

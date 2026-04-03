@@ -1,5 +1,5 @@
 ---
-applyTo: "apps/**,packages/**"
+applyTo: 'apps/**,packages/**'
 ---
 
 # Backend instructions
@@ -22,6 +22,7 @@ applyTo: "apps/**,packages/**"
 ## Command handler conventions
 
 Every command handler must:
+
 1. Load player from `PlayerRepository`.
 2. Check idempotency key – return early if already processed.
 3. Validate domain rules (throw domain errors if invalid).

@@ -45,7 +45,9 @@ describe('claimOfflineEarningsHandler', () => {
 
     const repo: PlayerRepository = {
       findById: vi.fn(async () => account),
-      save: vi.fn(async (a) => { saved = a; }),
+      save: vi.fn(async (a) => {
+        saved = a;
+      }),
       hasProcessedKey: vi.fn(async () => false),
     };
 

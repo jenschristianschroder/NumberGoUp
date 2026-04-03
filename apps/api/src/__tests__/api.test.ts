@@ -57,7 +57,9 @@ async function buildTestApp(playerRepo: PlayerRepository, eventRepo: LiveEventRe
   // Fastify v5: err is unknown – use instanceof narrowing before property access.
   app.setErrorHandler(async (err, req, reply) => {
     if (err instanceof ZodError) {
-      return reply.status(400).send({ code: 'VALIDATION_ERROR', message: 'bad request', requestId: req.id });
+      return reply
+        .status(400)
+        .send({ code: 'VALIDATION_ERROR', message: 'bad request', requestId: req.id });
     }
     if (err instanceof DomainError) {
       const status = err.code === 'PLAYER_NOT_FOUND' ? 404 : 400;

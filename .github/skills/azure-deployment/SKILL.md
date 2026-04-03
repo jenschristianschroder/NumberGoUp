@@ -20,21 +20,22 @@ az deployment group create \
 
 ## Required Azure resources
 
-| Resource | Module |
-|----------|--------|
-| User-assigned managed identity | `modules/identity.bicep` |
-| Key Vault | `modules/keyvault.bicep` |
-| Storage Account | `modules/storage.bicep` |
-| Service Bus namespace + queue | `modules/servicebus.bicep` |
-| PostgreSQL Flexible Server | `modules/postgres.bicep` |
-| Container Apps environment | `modules/container-env.bicep` |
-| API Container App | `modules/api-app.bicep` |
-| Worker Container App | `modules/worker-app.bicep` |
-| Application Insights | `modules/monitoring.bicep` |
+| Resource                       | Module                        |
+| ------------------------------ | ----------------------------- |
+| User-assigned managed identity | `modules/identity.bicep`      |
+| Key Vault                      | `modules/keyvault.bicep`      |
+| Storage Account                | `modules/storage.bicep`       |
+| Service Bus namespace + queue  | `modules/servicebus.bicep`    |
+| PostgreSQL Flexible Server     | `modules/postgres.bicep`      |
+| Container Apps environment     | `modules/container-env.bicep` |
+| API Container App              | `modules/api-app.bicep`       |
+| Worker Container App           | `modules/worker-app.bicep`    |
+| Application Insights           | `modules/monitoring.bicep`    |
 
 ## Container images
 
 Images are published to GitHub Container Registry:
+
 - `ghcr.io/jenschristianschroder/numbergoUp/api:latest`
 - `ghcr.io/jenschristianschroder/numbergoUp/worker:latest`
 
@@ -47,5 +48,6 @@ Images are published to GitHub Container Registry:
 ## CI/CD
 
 GitHub Actions workflow: `.github/workflows/ci.yml`
+
 - Runs on push to `main` and pull requests
 - Steps: install → lint → build → test → (on main) deploy

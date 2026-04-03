@@ -25,10 +25,7 @@ export class MessageProcessor {
     private readonly eventRepo: LiveEventRepository,
   ) {}
 
-  async process(
-    raw: ServiceBusReceivedMessage,
-    receiver: ServiceBusReceiver,
-  ): Promise<void> {
+  async process(raw: ServiceBusReceivedMessage, receiver: ServiceBusReceiver): Promise<void> {
     let message: ServiceBusMessage;
     try {
       message = raw.body as ServiceBusMessage;
