@@ -1,12 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Fastify from 'fastify';
 import sensible from '@fastify/sensible';
 import { ZodError } from 'zod';
 import { registerRoutes } from '../routes/index.js';
-import { DomainError, PlayerNotFoundError, asPlayerId, asGeneratorId, asUpgradeId } from '@numbergoUp/domain';
+import { DomainError, asPlayerId, asGeneratorId, asUpgradeId } from '@numbergoUp/domain';
 import type { PlayerRepository, LiveEventRepository } from '@numbergoUp/application';
 import type { PlayerAccount } from '@numbergoUp/domain';
-import type { LiveEvent } from '@numbergoUp/domain';
 
 function makeTestAccount(): PlayerAccount {
   return {
@@ -55,7 +54,8 @@ async function buildTestApp(playerRepo: PlayerRepository, eventRepo: LiveEventRe
   const app = Fastify({ logger: false, genReqId: () => crypto.randomUUID() });
   await app.register(sensible);
 
-  app.setErrorHandler((err, req, reply) => {
+  // Fastify v5: err is unknown – use instanceof narrowing before property access.
+  app.setErrorHandler(async (err, req, reply) => {
     if (err instanceof ZodError) {
       return reply.status(400).send({ code: 'VALIDATION_ERROR', message: 'bad request', requestId: req.id });
     }

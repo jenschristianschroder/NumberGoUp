@@ -7,9 +7,6 @@ import {
   claimEventRewardHandler,
   SystemClock,
 } from '@numbergoUp/application';
-import {
-  DomainError,
-} from '@numbergoUp/domain';
 import type { PlayerRepository } from '@numbergoUp/application';
 import type { LiveEventRepository } from '@numbergoUp/application';
 import {
@@ -172,43 +169,4 @@ export function registerRoutes(
 
 function errorResponse(code: string, message: string, requestId: string) {
   return { code, message, requestId };
-}
-
-// ─── Error handler helper ─────────────────────────────────────────────────────
-
-export function handleDomainError(
-  err: unknown,
-  reply: import('fastify').FastifyReply,
-  requestId: string,
-): void {
-  if (err instanceof DomainError) {
-    const status = domainErrorToHttpStatus(err);
-    void reply.status(status).send({ code: err.code, message: err.message, requestId });
-    return;
-  }
-  // Re-throw unknown errors so Fastify's default error handler picks them up
-  throw err;
-}
-
-function domainErrorToHttpStatus(err: DomainError): number {
-  switch (err.code) {
-    case 'PLAYER_NOT_FOUND':
-    case 'UPGRADE_NOT_FOUND':
-    case 'GENERATOR_NOT_FOUND':
-    case 'EVENT_NOT_FOUND':
-    case 'REWARD_NOT_FOUND':
-      return 404;
-    case 'UPGRADE_ALREADY_PURCHASED':
-    case 'REWARD_ALREADY_CLAIMED':
-    case 'DUPLICATE_COMMAND':
-      return 409;
-    case 'INSUFFICIENT_FUNDS':
-    case 'PRESTIGE_THRESHOLD_NOT_MET':
-    case 'EVENT_EXPIRED':
-      return 422;
-    case 'CONCURRENCY_CONFLICT':
-      return 409;
-    default:
-      return 400;
-  }
 }

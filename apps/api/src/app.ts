@@ -16,7 +16,9 @@ export async function buildApp() {
   await app.register(sensible);
 
   // ─── Global error handler ─────────────────────────────────────────────────
-  app.setErrorHandler((err, req, reply) => {
+  // In Fastify v5, `err` is typed as `unknown` (was `FastifyError` in v4).
+  // Use instanceof narrowing before accessing any properties.
+  app.setErrorHandler(async (err, req, reply) => {
     if (err instanceof ZodError) {
       return reply.status(400).send({
         code: 'VALIDATION_ERROR',
@@ -33,7 +35,12 @@ export async function buildApp() {
         requestId: req.id,
       });
     }
-    req.log.error(err);
+    // Log with safe unknown-type handling, then return a generic 500.
+    if (err instanceof Error) {
+      req.log.error(err);
+    } else {
+      req.log.error({ unknownError: err }, 'Non-Error thrown');
+    }
     return reply.status(500).send({
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
