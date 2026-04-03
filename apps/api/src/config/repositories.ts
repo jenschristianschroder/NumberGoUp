@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
-import { PostgresPlayerRepository } from '@numbergoUp/infrastructure';
-import type { PlayerRepository, LiveEventRepository } from '@numbergoUp/application';
+import { PostgresPlayerRepository, InMemoryThemeRepository } from '@numbergoUp/infrastructure';
+import type { PlayerRepository, LiveEventRepository, ThemeRepository } from '@numbergoUp/application';
 import type { LiveEvent } from '@numbergoUp/domain';
 import { isEventActive } from '@numbergoUp/domain';
 
@@ -31,10 +31,12 @@ class StubLiveEventRepository implements LiveEventRepository {
 export function createRepositories(): {
   playerRepo: PlayerRepository;
   eventRepo: LiveEventRepository;
+  themeRepo: ThemeRepository;
 } {
   const pool = createPool();
   return {
     playerRepo: new PostgresPlayerRepository(pool),
     eventRepo: new StubLiveEventRepository(),
+    themeRepo: new InMemoryThemeRepository(),
   };
 }

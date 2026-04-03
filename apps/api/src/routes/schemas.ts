@@ -27,3 +27,9 @@ export const ClaimRewardSchema = z.object({
   rewardId: z.string().min(1),
   idempotencyKey: z.string().uuid(),
 });
+
+export const CreateAccountSchema = z.object({
+  playerId: z.string().min(1),
+  themeId: z.string().min(1),
+  idempotencyKey: z.string().uuid(),
+});

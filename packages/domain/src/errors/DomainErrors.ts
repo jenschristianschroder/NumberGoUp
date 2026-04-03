@@ -84,3 +84,15 @@ export class PrestigeThresholdNotMetError extends DomainError {
     );
   }
 }
+
+export class ThemeNotFoundError extends DomainError {
+  constructor(themeId: string) {
+    super('THEME_NOT_FOUND', `Theme ${themeId} not found.`);
+  }
+}
+
+export class PlayerAlreadyExistsError extends DomainError {
+  constructor(playerId: string) {
+    super('PLAYER_ALREADY_EXISTS', `Player ${playerId} already exists.`);
+  }
+}

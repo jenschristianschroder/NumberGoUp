@@ -19,9 +19,10 @@ export const MAX_OFFLINE_SECONDS = 8 * 60 * 60; // 8 hours
 export function computeOfflineEarnings(
   run: RunState,
   now: Date,
+  maxOfflineSeconds: number = MAX_OFFLINE_SECONDS,
 ): { earned: Currency; secondsElapsed: number } {
   const rawSeconds = Math.floor((now.getTime() - run.lastTickAt.getTime()) / 1000);
-  const secondsElapsed = Math.min(rawSeconds, MAX_OFFLINE_SECONDS);
+  const secondsElapsed = Math.min(rawSeconds, maxOfflineSeconds);
 
   const boostMultiplierScaled = combinedBoostMultiplierScaled(run.activeBoosts, now);
   // Base multiplier is 1000 (=1×); boosts are additive on top
@@ -66,6 +67,9 @@ export function totalOutputPerSecond(
 /** The minimum lifetime earnings required to perform a prestige reset. */
 export const PRESTIGE_MINIMUM_LIFETIME_EARNINGS = 1_000_000n;
 
-export function canPrestige(account: PlayerAccount): boolean {
-  return account.meta.totalLifetimeEarnings >= PRESTIGE_MINIMUM_LIFETIME_EARNINGS;
+export function canPrestige(
+  account: PlayerAccount,
+  prestigeThreshold: Currency = PRESTIGE_MINIMUM_LIFETIME_EARNINGS,
+): boolean {
+  return account.meta.totalLifetimeEarnings >= prestigeThreshold;
 }

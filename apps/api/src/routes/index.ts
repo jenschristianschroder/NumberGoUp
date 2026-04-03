@@ -5,24 +5,28 @@ import {
   prestigeResetHandler,
   assignAutomationHandler,
   claimEventRewardHandler,
+  createAccountHandler,
   SystemClock,
 } from '@numbergoUp/application';
 import type { PlayerRepository } from '@numbergoUp/application';
 import type { LiveEventRepository } from '@numbergoUp/application';
+import type { ThemeRepository } from '@numbergoUp/application';
 import {
   BuyUpgradeSchema,
   ClaimOfflineEarningsSchema,
   PrestigeSchema,
   AssignAutomationSchema,
   ClaimRewardSchema,
+  CreateAccountSchema,
   GetPlayerStateParamsSchema,
 } from './schemas.js';
-import { mapPlayerToDto } from './mappers.js';
+import { mapPlayerToDto, mapThemeToDto, mapThemeToSummaryDto } from './mappers.js';
 
 export function registerRoutes(
   app: FastifyInstance,
   playerRepo: PlayerRepository,
   eventRepo: LiveEventRepository,
+  themeRepo: ThemeRepository,
 ): void {
   // ─── Health ────────────────────────────────────────────────────────────────
   app.get('/health', async (_req, reply) => {
@@ -165,6 +169,57 @@ export function registerRoutes(
       });
     },
   );
+
+  // ─── Create account ──────────────────────────────────────────────────────
+  app.post<{ Body: unknown }>('/players', async (req, reply) => {
+    const body = CreateAccountSchema.parse(req.body);
+
+    const result = await createAccountHandler(
+      {
+        playerId: body.playerId,
+        themeId: body.themeId,
+        idempotencyKey: body.idempotencyKey,
+      },
+      playerRepo,
+      themeRepo,
+      SystemClock,
+    );
+
+    const account = await playerRepo.findById(result.playerId);
+    if (!account) {
+      return reply
+        .status(500)
+        .send(errorResponse('INTERNAL_ERROR', 'Failed to load created account', req.id));
+    }
+
+    return reply.status(201).send({
+      data: mapPlayerToDto(account),
+      requestId: req.id,
+    });
+  });
+
+  // ─── List themes ────────────────────────────────────────────────────────────
+  app.get('/themes', async (_req, reply) => {
+    const themes = themeRepo.listAll();
+    return reply.send({
+      data: themes.map(mapThemeToSummaryDto),
+      requestId: _req.id,
+    });
+  });
+
+  // ─── Get theme by ID ───────────────────────────────────────────────────────
+  app.get<{ Params: { themeId: string } }>('/themes/:themeId', async (req, reply) => {
+    const theme = themeRepo.findById(req.params.themeId);
+    if (!theme) {
+      return reply
+        .status(404)
+        .send(errorResponse('THEME_NOT_FOUND', 'Theme not found', req.id));
+    }
+    return reply.send({
+      data: mapThemeToDto(theme),
+      requestId: req.id,
+    });
+  });
 }
 
 function errorResponse(code: string, message: string, requestId: string) {
