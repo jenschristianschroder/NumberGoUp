@@ -1,8 +1,12 @@
 import type { PlayerAccount, GameTheme } from '@numbergoUp/domain';
-import type { PlayerStateDto, ThemeDto, ThemeSummaryDto, ResearchNodeDto } from '@numbergoUp/contracts';
+import type {
+  PlayerStateDto,
+  ThemeDto,
+  ThemeSummaryDto,
+  ResearchNodeDto,
+} from '@numbergoUp/contracts';
 
 export function mapPlayerToDto(account: PlayerAccount): PlayerStateDto {
-  const milestoneNodeIds = new Set<string>(); // filled lazily by theme if needed
   return {
     playerId: account.playerId,
     currency: account.run.currency.toString(),
@@ -59,9 +63,7 @@ export function mapPlayerToDtoWithTheme(
   return dto;
 }
 
-function mapResearchNodeToDto(
-  node: GameTheme['researchNodes'][number],
-): ResearchNodeDto {
+function mapResearchNodeToDto(node: GameTheme['researchNodes'][number]): ResearchNodeDto {
   return {
     id: node.id,
     name: node.name,

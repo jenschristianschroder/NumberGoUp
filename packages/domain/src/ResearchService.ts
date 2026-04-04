@@ -1,7 +1,6 @@
-import type { ResearchNode, ResearchEffect, ResearchEffectType } from './models/ResearchNode.js';
+import type { ResearchNode, ResearchEffectType } from './models/ResearchNode.js';
 import type { ResearchState } from './models/ResearchState.js';
 import type { ResearchNodeId } from './valueObjects/Identifiers.js';
-import type { Currency } from './valueObjects/Currency.js';
 
 /**
  * Check whether a player can unlock a specific research node.
@@ -11,10 +10,7 @@ import type { Currency } from './valueObjects/Currency.js';
  *  2. All prerequisite nodes are unlocked.
  *  3. The player has enough research points to pay the cost.
  */
-export function canUnlockResearchNode(
-  state: ResearchState,
-  node: ResearchNode,
-): boolean {
+export function canUnlockResearchNode(state: ResearchState, node: ResearchNode): boolean {
   if (state.unlockedNodeIds.includes(node.id)) return false;
   const prereqsMet = node.prerequisites.every((preId) => state.unlockedNodeIds.includes(preId));
   if (!prereqsMet) return false;
@@ -27,10 +23,7 @@ export function canUnlockResearchNode(
  * Callers must validate with `canUnlockResearchNode` first.
  * Returns a new `ResearchState` (immutable update).
  */
-export function unlockResearchNode(
-  state: ResearchState,
-  node: ResearchNode,
-): ResearchState {
+export function unlockResearchNode(state: ResearchState, node: ResearchNode): ResearchState {
   return {
     ...state,
     researchPoints: state.researchPoints - node.cost,
@@ -87,7 +80,8 @@ export function researchOfflineMaxSecondsBonus(
   unlockedNodeIds: ResearchNodeId[],
   allNodes: ResearchNode[],
 ): number {
-  const bonus = aggregateResearchEffects(unlockedNodeIds, allNodes).get('offline_max_seconds') ?? 0n;
+  const bonus =
+    aggregateResearchEffects(unlockedNodeIds, allNodes).get('offline_max_seconds') ?? 0n;
   return Number(bonus);
 }
 

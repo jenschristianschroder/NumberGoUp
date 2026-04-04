@@ -76,8 +76,9 @@ Requirements:
 Effect:
 
 - Resets: `currency = 0`, generators to base, upgrades un-purchased
-- Preserves: `MetaProgression`, `totalLifetimeEarnings`, `claimedRewards`
+- Preserves: `MetaProgression`, `totalLifetimeEarnings`, `claimedRewards`, `research`
 - Grants: `+100` to `permanentMultiplierScaled` per prestige
+- Grants: `researchPointsPerPrestige` research points (default 10, configurable per theme)
 
 Permanent multiplier compound effect after N prestiges:
 
@@ -111,3 +112,78 @@ Expired boosts are ignored; they are not removed from the array immediately.
 - Integer arithmetic truncates at each division step – this is intentional and matches BigInt semantics.
 - Offline earnings are computed once at claim time; if a player does not claim, old earnings accumulate to the cap.
 - There is no real-time simulation; this is a tick-on-interaction model.
+
+## Research system
+
+### Research currency
+
+Research points are a separate currency earned on prestige. They do not compete with the primary run currency.
+
+| Layer              | Type                                     |
+| ------------------ | ---------------------------------------- |
+| TypeScript runtime | `bigint`                                 |
+| PostgreSQL         | `TEXT` (decimal string)                  |
+| JSON API responses | `string` (e.g. `"researchPoints": "20"`) |
+
+### Earning research points
+
+Currently, the only source is **prestige**:
+
+```
+researchPointsAwarded = theme.researchPointsPerPrestige  (default: 10)
+```
+
+Future sources may include lifetime-earnings milestones, events, or currency conversion.
+
+### Unlocking research nodes
+
+To unlock a node:
+
+1. All prerequisite nodes must already be unlocked.
+2. The player must have `researchPoints >= node.cost`.
+3. Cost is deducted: `researchPoints -= node.cost`.
+4. The node ID is appended to `unlockedNodeIds`.
+
+### Research effects
+
+Unlocked nodes grant permanent bonuses. Effects are aggregated across all unlocked nodes:
+
+```
+totalBonus(type) = sum(effect.value for effect in unlockedEffects where effect.type == type)
+```
+
+Effect types and their application:
+
+| Type                   | Applies to                 | Units        |
+| ---------------------- | -------------------------- | ------------ |
+| `generator_multiplier` | All generator output       | Scaled ×1000 |
+| `prestige_multiplier`  | Prestige multiplier reward | Scaled ×1000 |
+| `offline_max_seconds`  | Offline earnings cap       | Seconds      |
+| `automation_slots`     | Available automation slots | Count        |
+| `boost_effectiveness`  | Timed boost multipliers    | Scaled ×1000 |
+
+### Research tier
+
+Research Tier is a derived value (not stored):
+
+```
+researchTier = count(unlockedNodeIds ∩ milestoneNodeIds)
+```
+
+Only nodes with `isMilestone: true` contribute to the tier.
+
+### Research tree structure (generic theme)
+
+The generic theme includes 8 nodes across 4 branches:
+
+- **Economy** (3 nodes, 1 milestone): generator output bonuses
+- **Prestige** (2 nodes, 1 milestone): prestige reward bonuses
+- **Offline** (2 nodes, 1 milestone): offline earnings cap increases
+- **Boost** (1 node): timed boost effectiveness
+
+### Persistence
+
+Research state survives prestige resets. It is stored in:
+
+- `player_research_state.research_points` (TEXT)
+- `player_research_state.unlocked_node_ids` (JSONB array)

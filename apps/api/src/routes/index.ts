@@ -22,7 +22,7 @@ import {
   GetPlayerStateParamsSchema,
   UnlockResearchSchema,
 } from './schemas.js';
-import { mapPlayerToDto, mapPlayerToDtoWithTheme, mapThemeToDto, mapThemeToSummaryDto } from './mappers.js';
+import { mapPlayerToDto, mapThemeToDto, mapThemeToSummaryDto } from './mappers.js';
 
 export function registerRoutes(
   app: FastifyInstance,
@@ -229,47 +229,42 @@ export function registerRoutes(
   );
 
   // ─── Get research tree ────────────────────────────────────────────────────
-  app.get<{ Params: { playerId: string } }>(
-    '/players/:playerId/research',
-    async (req, reply) => {
-      const { playerId } = GetPlayerStateParamsSchema.parse(req.params);
-      const account = await playerRepo.findById(playerId);
-      if (!account) {
-        return reply
-          .status(404)
-          .send(errorResponse('PLAYER_NOT_FOUND', 'Player not found', req.id));
-      }
+  app.get<{ Params: { playerId: string } }>('/players/:playerId/research', async (req, reply) => {
+    const { playerId } = GetPlayerStateParamsSchema.parse(req.params);
+    const account = await playerRepo.findById(playerId);
+    if (!account) {
+      return reply.status(404).send(errorResponse('PLAYER_NOT_FOUND', 'Player not found', req.id));
+    }
 
-      const theme = themeRepo.findById(account.themeId);
-      const researchNodes = (theme?.researchNodes ?? []).map((n) => ({
-        id: n.id,
-        name: n.name,
-        description: n.description,
-        cost: n.cost.toString(),
-        prerequisites: n.prerequisites.map((p) => p.toString()),
-        effects: n.effects.map((e) => ({ type: e.type, value: e.value.toString() })),
-        branch: n.branch,
-        isMilestone: n.isMilestone,
-        unlocked: account.meta.research.unlockedNodeIds.includes(n.id),
-      }));
+    const theme = themeRepo.findById(account.themeId);
+    const researchNodes = (theme?.researchNodes ?? []).map((n) => ({
+      id: n.id,
+      name: n.name,
+      description: n.description,
+      cost: n.cost.toString(),
+      prerequisites: n.prerequisites.map((p) => p.toString()),
+      effects: n.effects.map((e) => ({ type: e.type, value: e.value.toString() })),
+      branch: n.branch,
+      isMilestone: n.isMilestone,
+      unlocked: account.meta.research.unlockedNodeIds.includes(n.id),
+    }));
 
-      const milestoneNodeIds = (theme?.researchNodes ?? [])
-        .filter((n) => n.isMilestone)
-        .map((n) => n.id as string);
-      const researchTier = account.meta.research.unlockedNodeIds.filter((id) =>
-        milestoneNodeIds.includes(id as string),
-      ).length;
+    const milestoneNodeIds = (theme?.researchNodes ?? [])
+      .filter((n) => n.isMilestone)
+      .map((n) => n.id as string);
+    const researchTier = account.meta.research.unlockedNodeIds.filter((id) =>
+      milestoneNodeIds.includes(id as string),
+    ).length;
 
-      return reply.send({
-        data: {
-          researchPoints: account.meta.research.researchPoints.toString(),
-          researchTier,
-          nodes: researchNodes,
-        },
-        requestId: req.id,
-      });
-    },
-  );
+    return reply.send({
+      data: {
+        researchPoints: account.meta.research.researchPoints.toString(),
+        researchTier,
+        nodes: researchNodes,
+      },
+      requestId: req.id,
+    });
+  });
 
   // ─── List themes ────────────────────────────────────────────────────────────
   app.get('/themes', async (_req, reply) => {

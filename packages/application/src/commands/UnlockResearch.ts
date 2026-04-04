@@ -5,7 +5,6 @@ import {
   ResearchNodeAlreadyUnlockedError,
   ResearchPrerequisitesNotMetError,
   InsufficientResearchPointsError,
-  canUnlockResearchNode,
   unlockResearchNode,
 } from '@numbergoUp/domain';
 import type { PlayerRepository } from '../ports/PlayerRepository.js';
