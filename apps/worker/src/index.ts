@@ -1,6 +1,6 @@
 import { ServiceBusClient } from '@azure/service-bus';
 import { Pool } from 'pg';
-import { PostgresPlayerRepository } from '@numbergoUp/infrastructure';
+import { PostgresPlayerRepository, InMemoryThemeRepository } from '@numbergoUp/infrastructure';
 import type { LiveEventRepository } from '@numbergoUp/application';
 import type { LiveEvent } from '@numbergoUp/domain';
 import { MessageProcessor } from './MessageProcessor.js';
@@ -22,7 +22,7 @@ async function main() {
   const pool = new Pool({ connectionString: DATABASE_URL });
   const playerRepo = new PostgresPlayerRepository(pool);
   const eventRepo = new StubLiveEventRepository();
-  const processor = new MessageProcessor(playerRepo, eventRepo);
+  const processor = new MessageProcessor(playerRepo, eventRepo, new InMemoryThemeRepository());
 
   const client = new ServiceBusClient(SERVICE_BUS_CONN);
   const receiver = client.createReceiver(QUEUE_NAME, { receiveMode: 'peekLock' });

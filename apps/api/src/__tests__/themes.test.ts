@@ -43,6 +43,7 @@ function makeTestTheme(): GameTheme {
 function makeTestAccount(): PlayerAccount {
   return {
     playerId: asPlayerId('player-1'),
+    themeId: 'generic',
     run: {
       currency: 200n,
       generators: [
@@ -117,6 +118,7 @@ function makeRepos() {
   const theme = makeTestTheme();
   const playerRepo: PlayerRepository = {
     findById: vi.fn(async () => null),
+    create: vi.fn(),
     save: vi.fn(),
     hasProcessedKey: vi.fn(async () => false),
   };

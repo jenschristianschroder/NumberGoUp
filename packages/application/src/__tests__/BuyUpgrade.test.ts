@@ -16,6 +16,7 @@ import {
 function makeAccount(overrides?: Partial<PlayerAccount>): PlayerAccount {
   return {
     playerId: asPlayerId('player-1'),
+    themeId: 'generic',
     run: {
       currency: 1000n,
       generators: [
@@ -60,6 +61,9 @@ function makeMockRepo(account: PlayerAccount | null): PlayerRepository {
   let stored = account;
   return {
     findById: vi.fn(async () => stored),
+    create: vi.fn(async (a: PlayerAccount) => {
+      stored = a;
+    }),
     save: vi.fn(async (a: PlayerAccount) => {
       stored = a;
     }),

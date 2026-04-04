@@ -47,6 +47,9 @@ function makeMockPlayerRepo(existing: PlayerAccount | null = null): PlayerReposi
   let stored = existing;
   return {
     findById: vi.fn(async () => stored),
+    create: vi.fn(async (a: PlayerAccount) => {
+      stored = a;
+    }),
     save: vi.fn(async (a: PlayerAccount) => {
       stored = a;
     }),
@@ -76,10 +79,11 @@ describe('createAccountHandler', () => {
     expect(result.playerId).toBe('player-1');
     expect(result.themeId).toBe('test-theme');
     expect(result.version).toBe(1);
-    expect(playerRepo.save).toHaveBeenCalledOnce();
+    expect(playerRepo.create).toHaveBeenCalledOnce();
 
-    const saved = (playerRepo.save as ReturnType<typeof vi.fn>).mock.calls[0][0] as PlayerAccount;
+    const saved = (playerRepo.create as ReturnType<typeof vi.fn>).mock.calls[0][0] as PlayerAccount;
     expect(saved.playerId).toBe('player-1');
+    expect(saved.themeId).toBe('test-theme');
     expect(saved.run.currency).toBe(200n);
     expect(saved.run.generators).toHaveLength(1);
     expect(saved.run.generators[0].name).toBe('Gen 1');
@@ -97,6 +101,7 @@ describe('createAccountHandler', () => {
   it('returns existing account on duplicate idempotency key', async () => {
     const existing: PlayerAccount = {
       playerId: asPlayerId('player-1'),
+      themeId: 'original-theme',
       run: {
         currency: 500n,
         generators: [],
@@ -122,20 +127,23 @@ describe('createAccountHandler', () => {
     const themeRepo = makeMockThemeRepo();
 
     const result = await createAccountHandler(
-      { playerId: 'player-1', themeId: 'test-theme', idempotencyKey: 'idem-dup' },
+      { playerId: 'player-1', themeId: 'different-theme', idempotencyKey: 'idem-dup' },
       playerRepo,
       themeRepo,
       fixedClock,
     );
 
     expect(result.playerId).toBe('player-1');
+    expect(result.themeId).toBe('original-theme');
     expect(result.version).toBe(1);
+    expect(playerRepo.create).not.toHaveBeenCalled();
     expect(playerRepo.save).not.toHaveBeenCalled();
   });
 
   it('throws PlayerAlreadyExistsError when player exists with different key', async () => {
     const existing: PlayerAccount = {
       playerId: asPlayerId('player-1'),
+      themeId: 'test-theme',
       run: {
         currency: 500n,
         generators: [],

@@ -14,6 +14,7 @@ import type { PlayerAccount } from '@numbergoUp/domain';
 function makeTestAccount(): PlayerAccount {
   return {
     playerId: asPlayerId('player-1'),
+    themeId: 'generic',
     run: {
       currency: 1000n,
       generators: [
@@ -85,6 +86,7 @@ describe('GET /health', () => {
   it('returns 200 with status ok', async () => {
     const playerRepo: PlayerRepository = {
       findById: vi.fn(),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(),
     };
@@ -106,6 +108,7 @@ describe('GET /players/:playerId', () => {
     const account = makeTestAccount();
     const playerRepo: PlayerRepository = {
       findById: vi.fn(async () => account),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(),
     };
@@ -125,6 +128,7 @@ describe('GET /players/:playerId', () => {
   it('returns 404 for unknown player', async () => {
     const playerRepo: PlayerRepository = {
       findById: vi.fn(async () => null),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(),
     };
