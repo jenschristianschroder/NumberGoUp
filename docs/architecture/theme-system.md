@@ -33,27 +33,27 @@ API Layer (apps/api)
 
 The top-level theme definition.
 
-| Field              | Type                  | Description                                                    |
-| ------------------ | --------------------- | -------------------------------------------------------------- |
-| `id`               | `string`              | Unique theme identifier (e.g. `"generic"`)                     |
-| `name`             | `string`              | Display name                                                   |
-| `description`      | `string`              | Flavor text                                                    |
-| `generators`       | `GeneratorTemplate[]` | Starting generator definitions                                 |
-| `upgrades`         | `UpgradeTemplate[]`   | Available upgrades                                             |
-| `initialCurrency`  | `Currency` (bigint)   | Starting currency for a new run                                |
-| `prestigeThreshold`| `Currency` (bigint)   | Minimum lifetime earnings to prestige                          |
-| `maxOfflineSeconds`| `number`              | Maximum seconds of offline earnings to compute                 |
+| Field               | Type                  | Description                                    |
+| ------------------- | --------------------- | ---------------------------------------------- |
+| `id`                | `string`              | Unique theme identifier (e.g. `"generic"`)     |
+| `name`              | `string`              | Display name                                   |
+| `description`       | `string`              | Flavor text                                    |
+| `generators`        | `GeneratorTemplate[]` | Starting generator definitions                 |
+| `upgrades`          | `UpgradeTemplate[]`   | Available upgrades                             |
+| `initialCurrency`   | `Currency` (bigint)   | Starting currency for a new run                |
+| `prestigeThreshold` | `Currency` (bigint)   | Minimum lifetime earnings to prestige          |
+| `maxOfflineSeconds` | `number`              | Maximum seconds of offline earnings to compute |
 
 ### `GeneratorTemplate`
 
 Blueprint for a generator. Generators created from a template always start at level 1.
 
-| Field              | Type          | Description                              |
-| ------------------ | ------------- | ---------------------------------------- |
-| `id`               | `GeneratorId` | Unique identifier                        |
-| `name`             | `string`      | Display name                             |
-| `baseOutput`       | `Currency`    | Base output per second                   |
-| `multiplierScaled` | `bigint`      | Starting multiplier scaled ×1000         |
+| Field              | Type          | Description                      |
+| ------------------ | ------------- | -------------------------------- |
+| `id`               | `GeneratorId` | Unique identifier                |
+| `name`             | `string`      | Display name                     |
+| `baseOutput`       | `Currency`    | Base output per second           |
+| `multiplierScaled` | `bigint`      | Starting multiplier scaled ×1000 |
 
 ### `UpgradeTemplate`
 
@@ -83,21 +83,21 @@ The built-in `generic` theme provides neutral/abstract content for testing:
 
 ### Upgrades
 
-| ID                      | Name            | Cost   | Target       | Bonus  |
-| ----------------------- | --------------- | ------ | ------------ | ------ |
-| `upgrade-efficiency-1`  | Efficiency I    | 100    | gen-small    | +0.5×  |
-| `upgrade-efficiency-2`  | Efficiency II   | 500    | gen-medium   | +0.5×  |
-| `upgrade-efficiency-3`  | Efficiency III  | 2,500  | gen-large    | +0.5×  |
-| `upgrade-efficiency-4`  | Efficiency IV   | 10,000 | gen-mega     | +0.5×  |
-| `upgrade-global-boost`  | Global Boost    | 50,000 | (none)       | +1.0×  |
+| ID                     | Name           | Cost   | Target     | Bonus |
+| ---------------------- | -------------- | ------ | ---------- | ----- |
+| `upgrade-efficiency-1` | Efficiency I   | 100    | gen-small  | +0.5× |
+| `upgrade-efficiency-2` | Efficiency II  | 500    | gen-medium | +0.5× |
+| `upgrade-efficiency-3` | Efficiency III | 2,500  | gen-large  | +0.5× |
+| `upgrade-efficiency-4` | Efficiency IV  | 10,000 | gen-mega   | +0.5× |
+| `upgrade-global-boost` | Global Boost   | 50,000 | (none)     | +1.0× |
 
 ### Constants
 
-| Setting            | Value       |
-| ------------------ | ----------- |
-| Initial currency   | 100         |
-| Prestige threshold | 1,000,000   |
-| Max offline seconds| 28,800 (8h) |
+| Setting             | Value       |
+| ------------------- | ----------- |
+| Initial currency    | 100         |
+| Prestige threshold  | 1,000,000   |
+| Max offline seconds | 28,800 (8h) |
 
 ## Creating a New Theme
 

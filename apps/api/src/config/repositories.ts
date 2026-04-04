@@ -1,6 +1,10 @@
 import { Pool } from 'pg';
 import { PostgresPlayerRepository, InMemoryThemeRepository } from '@numbergoUp/infrastructure';
-import type { PlayerRepository, LiveEventRepository, ThemeRepository } from '@numbergoUp/application';
+import type {
+  PlayerRepository,
+  LiveEventRepository,
+  ThemeRepository,
+} from '@numbergoUp/application';
 import type { LiveEvent } from '@numbergoUp/domain';
 import { isEventActive } from '@numbergoUp/domain';
 

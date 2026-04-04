@@ -1,6 +1,10 @@
 import type { ServiceBusReceivedMessage, ServiceBusReceiver } from '@azure/service-bus';
 import type { ServiceBusMessage, MessageType } from '@numbergoUp/contracts';
-import type { PlayerRepository, LiveEventRepository, ThemeRepository } from '@numbergoUp/application';
+import type {
+  PlayerRepository,
+  LiveEventRepository,
+  ThemeRepository,
+} from '@numbergoUp/application';
 import {
   buyUpgradeHandler,
   claimOfflineEarningsHandler,

@@ -174,12 +174,12 @@ All state-changing commands require an `idempotencyKey` (UUID). Duplicate keys r
 
 ## HTTP status codes
 
-| Code | Meaning                                                             |
-| ---- | ------------------------------------------------------------------- |
-| 200  | Success                                                             |
-| 201  | Created (new account)                                               |
-| 400  | Validation error                                                    |
-| 404  | Resource not found (player, theme, upgrade, event, reward)          |
-| 409  | Conflict (duplicate, concurrency, already purchased/exists)         |
-| 422  | Business rule violation (insufficient funds, etc.)                  |
-| 500  | Unexpected server error                                             |
+| Code | Meaning                                                     |
+| ---- | ----------------------------------------------------------- |
+| 200  | Success                                                     |
+| 201  | Created (new account)                                       |
+| 400  | Validation error                                            |
+| 404  | Resource not found (player, theme, upgrade, event, reward)  |
+| 409  | Conflict (duplicate, concurrency, already purchased/exists) |
+| 422  | Business rule violation (insufficient funds, etc.)          |
+| 500  | Unexpected server error                                     |

@@ -4,7 +4,11 @@ import sensible from '@fastify/sensible';
 import { ZodError } from 'zod';
 import { registerRoutes } from '../routes/index.js';
 import { DomainError, asPlayerId, asGeneratorId, asUpgradeId } from '@numbergoUp/domain';
-import type { PlayerRepository, LiveEventRepository, ThemeRepository } from '@numbergoUp/application';
+import type {
+  PlayerRepository,
+  LiveEventRepository,
+  ThemeRepository,
+} from '@numbergoUp/application';
 import type { PlayerAccount, GameTheme } from '@numbergoUp/domain';
 
 function makeTestTheme(): GameTheme {

@@ -211,9 +211,7 @@ export function registerRoutes(
   app.get<{ Params: { themeId: string } }>('/themes/:themeId', async (req, reply) => {
     const theme = themeRepo.findById(req.params.themeId);
     if (!theme) {
-      return reply
-        .status(404)
-        .send(errorResponse('THEME_NOT_FOUND', 'Theme not found', req.id));
+      return reply.status(404).send(errorResponse('THEME_NOT_FOUND', 'Theme not found', req.id));
     }
     return reply.send({
       data: mapThemeToDto(theme),
