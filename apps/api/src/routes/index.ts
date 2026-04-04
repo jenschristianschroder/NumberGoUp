@@ -6,6 +6,7 @@ import {
   assignAutomationHandler,
   claimEventRewardHandler,
   createAccountHandler,
+  unlockResearchHandler,
   SystemClock,
 } from '@numbergoUp/application';
 import type { PlayerRepository } from '@numbergoUp/application';
@@ -19,8 +20,9 @@ import {
   ClaimRewardSchema,
   CreateAccountSchema,
   GetPlayerStateParamsSchema,
+  UnlockResearchSchema,
 } from './schemas.js';
-import { mapPlayerToDto, mapThemeToDto, mapThemeToSummaryDto } from './mappers.js';
+import { mapPlayerToDto, mapPlayerToDtoWithTheme, mapThemeToDto, mapThemeToSummaryDto } from './mappers.js';
 
 export function registerRoutes(
   app: FastifyInstance,
@@ -105,6 +107,7 @@ export function registerRoutes(
         { playerId, idempotencyKey: body.idempotencyKey },
         playerRepo,
         SystemClock,
+        themeRepo,
       );
 
       return reply.status(200).send({
@@ -112,6 +115,7 @@ export function registerRoutes(
           playerId: result.playerId,
           prestigeCount: result.prestigeCount,
           newMultiplier: result.newMultiplier.toString(),
+          researchPointsAwarded: result.researchPointsAwarded.toString(),
           version: result.version,
         },
         requestId: req.id,
@@ -197,6 +201,75 @@ export function registerRoutes(
       requestId: req.id,
     });
   });
+
+  // ─── Unlock research node ─────────────────────────────────────────────────
+  app.post<{ Params: { playerId: string }; Body: unknown }>(
+    '/players/:playerId/research/unlock',
+    async (req, reply) => {
+      const { playerId } = GetPlayerStateParamsSchema.parse(req.params);
+      const body = UnlockResearchSchema.parse(req.body);
+
+      const result = await unlockResearchHandler(
+        { playerId, nodeId: body.nodeId, idempotencyKey: body.idempotencyKey },
+        playerRepo,
+        themeRepo,
+        SystemClock,
+      );
+
+      return reply.status(200).send({
+        data: {
+          playerId: result.playerId,
+          nodeId: result.nodeId,
+          newResearchPoints: result.newResearchPoints.toString(),
+          version: result.version,
+        },
+        requestId: req.id,
+      });
+    },
+  );
+
+  // ─── Get research tree ────────────────────────────────────────────────────
+  app.get<{ Params: { playerId: string } }>(
+    '/players/:playerId/research',
+    async (req, reply) => {
+      const { playerId } = GetPlayerStateParamsSchema.parse(req.params);
+      const account = await playerRepo.findById(playerId);
+      if (!account) {
+        return reply
+          .status(404)
+          .send(errorResponse('PLAYER_NOT_FOUND', 'Player not found', req.id));
+      }
+
+      const theme = themeRepo.findById(account.themeId);
+      const researchNodes = (theme?.researchNodes ?? []).map((n) => ({
+        id: n.id,
+        name: n.name,
+        description: n.description,
+        cost: n.cost.toString(),
+        prerequisites: n.prerequisites.map((p) => p.toString()),
+        effects: n.effects.map((e) => ({ type: e.type, value: e.value.toString() })),
+        branch: n.branch,
+        isMilestone: n.isMilestone,
+        unlocked: account.meta.research.unlockedNodeIds.includes(n.id),
+      }));
+
+      const milestoneNodeIds = (theme?.researchNodes ?? [])
+        .filter((n) => n.isMilestone)
+        .map((n) => n.id as string);
+      const researchTier = account.meta.research.unlockedNodeIds.filter((id) =>
+        milestoneNodeIds.includes(id as string),
+      ).length;
+
+      return reply.send({
+        data: {
+          researchPoints: account.meta.research.researchPoints.toString(),
+          researchTier,
+          nodes: researchNodes,
+        },
+        requestId: req.id,
+      });
+    },
+  );
 
   // ─── List themes ────────────────────────────────────────────────────────────
   app.get('/themes', async (_req, reply) => {

@@ -46,6 +46,11 @@ function makeTestAccount(): PlayerAccount {
       prestigeCount: 0,
       permanentMultiplierScaled: 0n,
       totalLifetimeEarnings: 0n,
+      research: {
+        playerId: asPlayerId('player-1'),
+        researchPoints: 0n,
+        unlockedNodeIds: [],
+      },
     },
     claimedRewards: [],
     processedIdempotencyKeys: [],

@@ -8,6 +8,7 @@ export type UpgradeId = string & { readonly __brand: 'UpgradeId' };
 export type AutomationId = string & { readonly __brand: 'AutomationId' };
 export type EventId = string & { readonly __brand: 'EventId' };
 export type RewardId = string & { readonly __brand: 'RewardId' };
+export type ResearchNodeId = string & { readonly __brand: 'ResearchNodeId' };
 
 export function asPlayerId(id: string): PlayerId {
   return id as PlayerId;
@@ -26,4 +27,7 @@ export function asEventId(id: string): EventId {
 }
 export function asRewardId(id: string): RewardId {
   return id as RewardId;
+}
+export function asResearchNodeId(id: string): ResearchNodeId {
+  return id as ResearchNodeId;
 }

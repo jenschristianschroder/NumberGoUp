@@ -33,3 +33,8 @@ export const CreateAccountSchema = z.object({
   themeId: z.string().min(1),
   idempotencyKey: z.string().uuid(),
 });
+
+export const UnlockResearchSchema = z.object({
+  nodeId: z.string().min(1),
+  idempotencyKey: z.string().uuid(),
+});

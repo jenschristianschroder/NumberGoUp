@@ -62,16 +62,20 @@ function domainErrorToStatus(code: string): number {
     case 'EVENT_NOT_FOUND':
     case 'REWARD_NOT_FOUND':
     case 'THEME_NOT_FOUND':
+    case 'RESEARCH_NODE_NOT_FOUND':
       return 404;
     case 'UPGRADE_ALREADY_PURCHASED':
     case 'REWARD_ALREADY_CLAIMED':
     case 'DUPLICATE_COMMAND':
     case 'CONCURRENCY_CONFLICT':
     case 'PLAYER_ALREADY_EXISTS':
+    case 'RESEARCH_NODE_ALREADY_UNLOCKED':
       return 409;
     case 'INSUFFICIENT_FUNDS':
     case 'PRESTIGE_THRESHOLD_NOT_MET':
     case 'EVENT_EXPIRED':
+    case 'INSUFFICIENT_RESEARCH_POINTS':
+    case 'RESEARCH_PREREQUISITES_NOT_MET':
       return 422;
     default:
       return 400;

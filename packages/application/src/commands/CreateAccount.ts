@@ -66,6 +66,11 @@ export async function createAccountHandler(
       prestigeCount: 0,
       permanentMultiplierScaled: 0n,
       totalLifetimeEarnings: 0n,
+      research: {
+        playerId: asPlayerId(command.playerId),
+        researchPoints: 0n,
+        unlockedNodeIds: [],
+      },
     },
     claimedRewards: [],
     processedIdempotencyKeys: [command.idempotencyKey],

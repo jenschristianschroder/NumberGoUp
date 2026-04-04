@@ -1,5 +1,5 @@
 import type { GameTheme } from '../models/GameTheme.js';
-import { asGeneratorId, asUpgradeId } from '../valueObjects/Identifiers.js';
+import { asGeneratorId, asUpgradeId, asResearchNodeId } from '../valueObjects/Identifiers.js';
 
 /**
  * Generic test theme – neutral names and balanced values for initial testing.
@@ -81,4 +81,91 @@ export const genericTheme: GameTheme = {
   initialCurrency: 100n,
   prestigeThreshold: 1_000_000n,
   maxOfflineSeconds: 8 * 60 * 60,
+  researchPointsPerPrestige: 10n,
+  researchNodes: [
+    // ── Economy branch ──────────────────────────────────────────────────────
+    {
+      id: asResearchNodeId('research-economy-1'),
+      name: 'Optimised Output I',
+      description: 'All generators gain +0.2× output.',
+      cost: 5n,
+      prerequisites: [],
+      effects: [{ type: 'generator_multiplier', value: 200n }],
+      branch: 'economy',
+      isMilestone: false,
+    },
+    {
+      id: asResearchNodeId('research-economy-2'),
+      name: 'Optimised Output II',
+      description: 'All generators gain +0.3× output.',
+      cost: 15n,
+      prerequisites: [asResearchNodeId('research-economy-1')],
+      effects: [{ type: 'generator_multiplier', value: 300n }],
+      branch: 'economy',
+      isMilestone: true,
+    },
+    {
+      id: asResearchNodeId('research-economy-3'),
+      name: 'Optimised Output III',
+      description: 'All generators gain +0.5× output.',
+      cost: 40n,
+      prerequisites: [asResearchNodeId('research-economy-2')],
+      effects: [{ type: 'generator_multiplier', value: 500n }],
+      branch: 'economy',
+      isMilestone: false,
+    },
+    // ── Prestige branch ─────────────────────────────────────────────────────
+    {
+      id: asResearchNodeId('research-prestige-1'),
+      name: 'Prestige Mastery I',
+      description: 'Prestige rewards are +0.2× stronger.',
+      cost: 10n,
+      prerequisites: [],
+      effects: [{ type: 'prestige_multiplier', value: 200n }],
+      branch: 'prestige',
+      isMilestone: false,
+    },
+    {
+      id: asResearchNodeId('research-prestige-2'),
+      name: 'Prestige Mastery II',
+      description: 'Prestige rewards are +0.3× stronger.',
+      cost: 25n,
+      prerequisites: [asResearchNodeId('research-prestige-1')],
+      effects: [{ type: 'prestige_multiplier', value: 300n }],
+      branch: 'prestige',
+      isMilestone: true,
+    },
+    // ── Offline branch ──────────────────────────────────────────────────────
+    {
+      id: asResearchNodeId('research-offline-1'),
+      name: 'Extended Downtime I',
+      description: 'Offline earnings cap increased by 2 hours.',
+      cost: 10n,
+      prerequisites: [],
+      effects: [{ type: 'offline_max_seconds', value: 7200n }],
+      branch: 'offline',
+      isMilestone: false,
+    },
+    {
+      id: asResearchNodeId('research-offline-2'),
+      name: 'Extended Downtime II',
+      description: 'Offline earnings cap increased by another 4 hours.',
+      cost: 30n,
+      prerequisites: [asResearchNodeId('research-offline-1')],
+      effects: [{ type: 'offline_max_seconds', value: 14400n }],
+      branch: 'offline',
+      isMilestone: true,
+    },
+    // ── Boost branch ────────────────────────────────────────────────────────
+    {
+      id: asResearchNodeId('research-boost-1'),
+      name: 'Boost Amplifier',
+      description: 'Timed boosts are +0.5× more effective.',
+      cost: 20n,
+      prerequisites: [],
+      effects: [{ type: 'boost_effectiveness', value: 500n }],
+      branch: 'boost',
+      isMilestone: false,
+    },
+  ],
 };

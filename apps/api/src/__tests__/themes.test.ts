@@ -37,6 +37,8 @@ function makeTestTheme(): GameTheme {
     initialCurrency: 200n,
     prestigeThreshold: 1_000_000n,
     maxOfflineSeconds: 28800,
+    researchPointsPerPrestige: 10n,
+    researchNodes: [],
   };
 }
 
@@ -75,6 +77,11 @@ function makeTestAccount(): PlayerAccount {
       prestigeCount: 0,
       permanentMultiplierScaled: 0n,
       totalLifetimeEarnings: 0n,
+      research: {
+        playerId: asPlayerId('player-1'),
+        researchPoints: 0n,
+        unlockedNodeIds: [],
+      },
     },
     claimedRewards: [],
     processedIdempotencyKeys: [],

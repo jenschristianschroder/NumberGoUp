@@ -40,6 +40,8 @@ function makeTheme(): GameTheme {
     initialCurrency: 200n,
     prestigeThreshold: 1_000_000n,
     maxOfflineSeconds: 28800,
+    researchPointsPerPrestige: 10n,
+    researchNodes: [],
   };
 }
 
@@ -115,6 +117,11 @@ describe('createAccountHandler', () => {
         prestigeCount: 0,
         permanentMultiplierScaled: 0n,
         totalLifetimeEarnings: 0n,
+        research: {
+          playerId: asPlayerId('player-1'),
+          researchPoints: 0n,
+          unlockedNodeIds: [],
+        },
       },
       claimedRewards: [],
       processedIdempotencyKeys: ['idem-dup'],
@@ -157,6 +164,11 @@ describe('createAccountHandler', () => {
         prestigeCount: 0,
         permanentMultiplierScaled: 0n,
         totalLifetimeEarnings: 0n,
+        research: {
+          playerId: asPlayerId('player-1'),
+          researchPoints: 0n,
+          unlockedNodeIds: [],
+        },
       },
       claimedRewards: [],
       processedIdempotencyKeys: ['idem-other'],

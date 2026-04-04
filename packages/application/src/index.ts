@@ -8,3 +8,4 @@ export * from './commands/PrestigeReset.js';
 export * from './commands/AssignAutomation.js';
 export * from './commands/ClaimEventReward.js';
 export * from './commands/CreateAccount.js';
+export * from './commands/UnlockResearch.js';

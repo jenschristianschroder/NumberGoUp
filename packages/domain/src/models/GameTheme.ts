@@ -1,8 +1,9 @@
-import type { GeneratorId, UpgradeId } from '../valueObjects/Identifiers.js';
+import type { GeneratorId, UpgradeId, ResearchNodeId } from '../valueObjects/Identifiers.js';
 import type { Currency } from '../valueObjects/Currency.js';
 import type { RunState } from './PlayerAccount.js';
 import type { Generator } from './Generator.js';
 import type { Upgrade } from './Upgrade.js';
+import type { ResearchEffectType } from './ResearchNode.js';
 
 /**
  * GeneratorTemplate – blueprint for a generator used by a theme.
@@ -31,6 +32,28 @@ export interface UpgradeTemplate {
 }
 
 /**
+ * ResearchEffectTemplate – blueprint for a single effect in a research node.
+ */
+export interface ResearchEffectTemplate {
+  type: ResearchEffectType;
+  value: bigint;
+}
+
+/**
+ * ResearchNodeTemplate – blueprint for a research node in the research tree.
+ */
+export interface ResearchNodeTemplate {
+  id: ResearchNodeId;
+  name: string;
+  description: string;
+  cost: Currency;
+  prerequisites: ResearchNodeId[];
+  effects: ResearchEffectTemplate[];
+  branch: string;
+  isMilestone: boolean;
+}
+
+/**
  * GameTheme – a content blueprint that defines the generators, upgrades,
  * economy constants, and flavor for a particular game theme.
  *
@@ -48,6 +71,10 @@ export interface GameTheme {
   prestigeThreshold: Currency;
   /** Maximum seconds of offline earnings to compute */
   maxOfflineSeconds: number;
+  /** Research tree node definitions for this theme. */
+  researchNodes: ResearchNodeTemplate[];
+  /** Research points awarded per prestige reset. */
+  researchPointsPerPrestige: Currency;
 }
 
 /**

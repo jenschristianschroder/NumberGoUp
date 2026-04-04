@@ -96,3 +96,30 @@ export class PlayerAlreadyExistsError extends DomainError {
     super('PLAYER_ALREADY_EXISTS', `Player ${playerId} already exists.`);
   }
 }
+
+export class ResearchNodeNotFoundError extends DomainError {
+  constructor(nodeId: string) {
+    super('RESEARCH_NODE_NOT_FOUND', `Research node ${nodeId} not found.`);
+  }
+}
+
+export class ResearchNodeAlreadyUnlockedError extends DomainError {
+  constructor(nodeId: string) {
+    super('RESEARCH_NODE_ALREADY_UNLOCKED', `Research node ${nodeId} is already unlocked.`);
+  }
+}
+
+export class ResearchPrerequisitesNotMetError extends DomainError {
+  constructor(nodeId: string) {
+    super(
+      'RESEARCH_PREREQUISITES_NOT_MET',
+      `Prerequisites for research node ${nodeId} are not met.`,
+    );
+  }
+}
+
+export class InsufficientResearchPointsError extends DomainError {
+  constructor() {
+    super('INSUFFICIENT_RESEARCH_POINTS', 'Not enough research points to unlock this node.');
+  }
+}

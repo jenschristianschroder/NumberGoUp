@@ -7,6 +7,7 @@ import {
   asAutomationId,
   asEventId,
   asRewardId,
+  asResearchNodeId,
   parseCurrency,
   ConcurrencyError,
 } from '@numbergoUp/domain';
@@ -32,6 +33,8 @@ export class PostgresPlayerRepository implements PlayerRepository {
                 r.currency, r.last_tick_at,
                 r.generators, r.upgrades, r.automations, r.active_boosts,
                 m.prestige_count, m.permanent_multiplier_scaled, m.total_lifetime_earnings,
+                COALESCE(rs.research_points, '0') AS research_points,
+                COALESCE(rs.unlocked_node_ids, '[]'::jsonb) AS unlocked_node_ids,
                 array_agg(DISTINCT ik.key) FILTER (WHERE ik.key IS NOT NULL) AS idempotency_keys,
                 json_agg(DISTINCT jsonb_build_object(
                   'eventId', rc.event_id,
@@ -41,12 +44,14 @@ export class PostgresPlayerRepository implements PlayerRepository {
          FROM players p
          JOIN player_run_state r ON r.player_id = p.id
          JOIN player_meta_progression m ON m.player_id = p.id
+         LEFT JOIN player_research_state rs ON rs.player_id = p.id
          LEFT JOIN player_idempotency_keys ik ON ik.player_id = p.id
          LEFT JOIN player_reward_claims rc ON rc.player_id = p.id
          WHERE p.id = $1
          GROUP BY p.id, r.currency, r.last_tick_at, r.generators, r.upgrades,
                   r.automations, r.active_boosts,
-                  m.prestige_count, m.permanent_multiplier_scaled, m.total_lifetime_earnings`,
+                  m.prestige_count, m.permanent_multiplier_scaled, m.total_lifetime_earnings,
+                  rs.research_points, rs.unlocked_node_ids`,
         [playerId],
       );
 
@@ -90,6 +95,17 @@ export class PostgresPlayerRepository implements PlayerRepository {
           account.meta.prestigeCount,
           account.meta.permanentMultiplierScaled.toString(),
           account.meta.totalLifetimeEarnings.toString(),
+        ],
+      );
+
+      // Insert research state
+      await client.query(
+        `INSERT INTO player_research_state (player_id, research_points, unlocked_node_ids)
+         VALUES ($1, $2, $3)`,
+        [
+          account.playerId,
+          account.meta.research.researchPoints.toString(),
+          JSON.stringify(account.meta.research.unlockedNodeIds),
         ],
       );
 
@@ -157,6 +173,20 @@ export class PostgresPlayerRepository implements PlayerRepository {
           account.meta.permanentMultiplierScaled.toString(),
           account.meta.totalLifetimeEarnings.toString(),
           account.playerId,
+        ],
+      );
+
+      // Upsert research state
+      await client.query(
+        `INSERT INTO player_research_state (player_id, research_points, unlocked_node_ids)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (player_id) DO UPDATE
+         SET research_points = EXCLUDED.research_points,
+             unlocked_node_ids = EXCLUDED.unlocked_node_ids`,
+        [
+          account.playerId,
+          account.meta.research.researchPoints.toString(),
+          JSON.stringify(account.meta.research.unlockedNodeIds),
         ],
       );
 
@@ -269,6 +299,15 @@ function rowToPlayerAccount(row: Record<string, unknown>): PlayerAccount {
     prestigeCount: row.prestige_count as number,
     permanentMultiplierScaled: BigInt(row.permanent_multiplier_scaled as string),
     totalLifetimeEarnings: parseCurrency(row.total_lifetime_earnings as string),
+    research: {
+      playerId: asPlayerId(row.id as string),
+      researchPoints: parseCurrency(
+        typeof row.research_points === 'string' ? row.research_points : '0',
+      ),
+      unlockedNodeIds: Array.isArray(row.unlocked_node_ids)
+        ? (row.unlocked_node_ids as string[]).map((id) => asResearchNodeId(id))
+        : [],
+    },
   };
 
   return {

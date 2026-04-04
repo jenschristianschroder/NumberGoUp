@@ -44,6 +44,29 @@ export interface MetaProgressionDto {
   prestigeCount: number;
   permanentMultiplier: string; // scaled ×1000
   totalLifetimeEarnings: string; // integer string
+  research: ResearchStateDto;
+}
+
+export interface ResearchStateDto {
+  researchPoints: string; // integer string
+  unlockedNodeIds: string[];
+  researchTier: number;
+}
+
+export interface ResearchNodeDto {
+  id: string;
+  name: string;
+  description: string;
+  cost: string; // integer string
+  prerequisites: string[];
+  effects: ResearchEffectDto[];
+  branch: string;
+  isMilestone: boolean;
+}
+
+export interface ResearchEffectDto {
+  type: string;
+  value: string; // integer string
 }
 
 export interface PlayerStateDto {
@@ -104,6 +127,19 @@ export interface PrestigeResponse {
   playerId: string;
   prestigeCount: number;
   newMultiplier: string;
+  researchPointsAwarded: string; // integer string
+  version: number;
+}
+
+export interface UnlockResearchRequest {
+  nodeId: string;
+  idempotencyKey: string;
+}
+
+export interface UnlockResearchResponse {
+  playerId: string;
+  nodeId: string;
+  newResearchPoints: string; // integer string
   version: number;
 }
 
@@ -155,6 +191,8 @@ export interface ThemeDto {
   initialCurrency: string; // integer string
   prestigeThreshold: string; // integer string
   maxOfflineSeconds: number;
+  researchNodes: ResearchNodeDto[];
+  researchPointsPerPrestige: string; // integer string
 }
 
 export interface ThemeSummaryDto {
@@ -171,7 +209,8 @@ export type MessageType =
   | 'prestige-reset'
   | 'assign-automation'
   | 'claim-event-reward'
-  | 'create-account';
+  | 'create-account'
+  | 'unlock-research';
 
 export interface ServiceBusMessage<T = unknown> {
   type: MessageType;
