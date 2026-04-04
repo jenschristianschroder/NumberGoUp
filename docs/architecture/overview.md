@@ -42,21 +42,23 @@ Client (mobile/web)
 
 - Pure TypeScript types and functions.
 - No I/O, no framework dependencies.
-- Models: `PlayerAccount`, `RunState`, `Generator`, `Upgrade`, `Automation`, `MetaProgression`, `TimedBoost`, `LiveEvent`, `RewardClaim`.
+- Models: `PlayerAccount`, `RunState`, `Generator`, `Upgrade`, `Automation`, `MetaProgression`, `TimedBoost`, `LiveEvent`, `GameTheme`.
+- Theme system: `GameTheme` type definitions, `createRunStateFromTheme` factory, built-in themes in `themes/`.
 - Economy logic: `EconomyService.ts` with `computeOfflineEarnings`, `applyMetaMultiplier`.
 - Value objects: `Currency` (bigint), typed ID brands.
 - Domain errors with stable codes.
 
 ### Application (`packages/application`)
 
-- Command handlers (use cases).
-- Port interfaces (`PlayerRepository`, `LiveEventRepository`, `Clock`).
+- Command handlers (use cases): `CreateAccount`, `BuyUpgrade`, `ClaimOfflineEarnings`, `PrestigeReset`, `AssignAutomation`, `ClaimEventReward`.
+- Port interfaces (`PlayerRepository`, `LiveEventRepository`, `ThemeRepository`, `Clock`).
 - Depends only on domain.
 
 ### Infrastructure (`packages/infrastructure`)
 
 - Implements application ports.
 - `PostgresPlayerRepository` – full player state CRUD with optimistic concurrency.
+- `InMemoryThemeRepository` – reads themes from the domain theme registry.
 - SQL migrations in `src/postgres/migrations/`.
 
 ### API (`apps/api`)

@@ -48,8 +48,8 @@ export async function buildApp() {
     });
   });
 
-  const { playerRepo, eventRepo } = createRepositories();
-  registerRoutes(app, playerRepo, eventRepo);
+  const { playerRepo, eventRepo, themeRepo } = createRepositories();
+  registerRoutes(app, playerRepo, eventRepo, themeRepo);
 
   return app;
 }
@@ -61,11 +61,13 @@ function domainErrorToStatus(code: string): number {
     case 'GENERATOR_NOT_FOUND':
     case 'EVENT_NOT_FOUND':
     case 'REWARD_NOT_FOUND':
+    case 'THEME_NOT_FOUND':
       return 404;
     case 'UPGRADE_ALREADY_PURCHASED':
     case 'REWARD_ALREADY_CLAIMED':
     case 'DUPLICATE_COMMAND':
     case 'CONCURRENCY_CONFLICT':
+    case 'PLAYER_ALREADY_EXISTS':
       return 409;
     case 'INSUFFICIENT_FUNDS':
     case 'PRESTIGE_THRESHOLD_NOT_MET':

@@ -4,7 +4,11 @@ import sensible from '@fastify/sensible';
 import { ZodError } from 'zod';
 import { registerRoutes } from '../routes/index.js';
 import { DomainError, asPlayerId, asGeneratorId, asUpgradeId } from '@numbergoUp/domain';
-import type { PlayerRepository, LiveEventRepository } from '@numbergoUp/application';
+import type {
+  PlayerRepository,
+  LiveEventRepository,
+  ThemeRepository,
+} from '@numbergoUp/application';
 import type { PlayerAccount } from '@numbergoUp/domain';
 
 function makeTestAccount(): PlayerAccount {
@@ -68,7 +72,12 @@ async function buildTestApp(playerRepo: PlayerRepository, eventRepo: LiveEventRe
     return reply.status(500).send({ code: 'INTERNAL_ERROR', message: 'error', requestId: req.id });
   });
 
-  registerRoutes(app, playerRepo, eventRepo);
+  const themeRepo: ThemeRepository = {
+    findById: vi.fn(() => undefined),
+    listAll: vi.fn(() => []),
+  };
+
+  registerRoutes(app, playerRepo, eventRepo, themeRepo);
   return app;
 }
 

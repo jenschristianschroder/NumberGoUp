@@ -1,12 +1,17 @@
 import type { ServiceBusReceivedMessage, ServiceBusReceiver } from '@azure/service-bus';
 import type { ServiceBusMessage, MessageType } from '@numbergoUp/contracts';
-import type { PlayerRepository, LiveEventRepository } from '@numbergoUp/application';
+import type {
+  PlayerRepository,
+  LiveEventRepository,
+  ThemeRepository,
+} from '@numbergoUp/application';
 import {
   buyUpgradeHandler,
   claimOfflineEarningsHandler,
   prestigeResetHandler,
   assignAutomationHandler,
   claimEventRewardHandler,
+  createAccountHandler,
   SystemClock,
 } from '@numbergoUp/application';
 import { DomainError } from '@numbergoUp/domain';
@@ -23,6 +28,7 @@ export class MessageProcessor {
   constructor(
     private readonly playerRepo: PlayerRepository,
     private readonly eventRepo: LiveEventRepository,
+    private readonly themeRepo: ThemeRepository,
   ) {}
 
   async process(raw: ServiceBusReceivedMessage, receiver: ServiceBusReceiver): Promise<void> {
@@ -114,6 +120,19 @@ export class MessageProcessor {
           },
           this.playerRepo,
           this.eventRepo,
+          SystemClock,
+        );
+        break;
+
+      case 'create-account':
+        await createAccountHandler(
+          {
+            playerId: message.playerId,
+            themeId: (message.payload as { themeId: string }).themeId,
+            idempotencyKey: message.idempotencyKey,
+          },
+          this.playerRepo,
+          this.themeRepo,
           SystemClock,
         );
         break;
