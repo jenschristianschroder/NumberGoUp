@@ -96,3 +96,18 @@ type GeneratorId = string & { readonly __brand: 'GeneratorId' };
 ```
 
 Use `asPlayerId()`, `asGeneratorId()` etc. to create branded IDs.
+
+## GameTheme
+
+Content blueprint for initializing a game. See [Theme System](./theme-system.md) for full details.
+
+| Field               | Type                  | Description                            |
+| ------------------- | --------------------- | -------------------------------------- |
+| `id`                | `string`              | Unique theme identifier                |
+| `name`              | `string`              | Display name                           |
+| `description`       | `string`              | Flavor text                            |
+| `generators`        | `GeneratorTemplate[]` | Starting generator definitions         |
+| `upgrades`          | `UpgradeTemplate[]`   | Available upgrades                     |
+| `initialCurrency`   | `Currency`            | Starting currency for a new run        |
+| `prestigeThreshold` | `Currency`            | Minimum lifetime earnings to prestige  |
+| `maxOfflineSeconds` | `number`              | Maximum offline earnings cap (seconds) |

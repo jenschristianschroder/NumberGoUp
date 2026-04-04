@@ -4,12 +4,17 @@ import sensible from '@fastify/sensible';
 import { ZodError } from 'zod';
 import { registerRoutes } from '../routes/index.js';
 import { DomainError, asPlayerId, asGeneratorId, asUpgradeId } from '@numbergoUp/domain';
-import type { PlayerRepository, LiveEventRepository } from '@numbergoUp/application';
+import type {
+  PlayerRepository,
+  LiveEventRepository,
+  ThemeRepository,
+} from '@numbergoUp/application';
 import type { PlayerAccount } from '@numbergoUp/domain';
 
 function makeTestAccount(): PlayerAccount {
   return {
     playerId: asPlayerId('player-1'),
+    themeId: 'generic',
     run: {
       currency: 1000n,
       generators: [
@@ -68,7 +73,12 @@ async function buildTestApp(playerRepo: PlayerRepository, eventRepo: LiveEventRe
     return reply.status(500).send({ code: 'INTERNAL_ERROR', message: 'error', requestId: req.id });
   });
 
-  registerRoutes(app, playerRepo, eventRepo);
+  const themeRepo: ThemeRepository = {
+    findById: vi.fn(() => undefined),
+    listAll: vi.fn(() => []),
+  };
+
+  registerRoutes(app, playerRepo, eventRepo, themeRepo);
   return app;
 }
 
@@ -76,6 +86,7 @@ describe('GET /health', () => {
   it('returns 200 with status ok', async () => {
     const playerRepo: PlayerRepository = {
       findById: vi.fn(),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(),
     };
@@ -97,6 +108,7 @@ describe('GET /players/:playerId', () => {
     const account = makeTestAccount();
     const playerRepo: PlayerRepository = {
       findById: vi.fn(async () => account),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(),
     };
@@ -116,6 +128,7 @@ describe('GET /players/:playerId', () => {
   it('returns 404 for unknown player', async () => {
     const playerRepo: PlayerRepository = {
       findById: vi.fn(async () => null),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(),
     };

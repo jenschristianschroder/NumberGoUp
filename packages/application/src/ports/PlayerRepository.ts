@@ -11,7 +11,13 @@ export interface PlayerRepository {
   findById(playerId: string): Promise<PlayerAccount | null>;
 
   /**
-   * Persist the account.
+   * Create a brand-new player account (INSERT).
+   * Use this for initial account creation; the account must not already exist.
+   */
+  create(account: PlayerAccount): Promise<void>;
+
+  /**
+   * Persist the account (UPDATE).
    * Throws ConcurrencyError if the stored version != account.version - 1.
    */
   save(account: PlayerAccount): Promise<void>;

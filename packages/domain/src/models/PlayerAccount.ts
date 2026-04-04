@@ -28,6 +28,8 @@ export interface RunState {
  */
 export interface PlayerAccount {
   playerId: PlayerId;
+  /** ID of the theme used to create this account. */
+  themeId: string;
   run: RunState;
   meta: MetaProgression;
   claimedRewards: RewardClaim[];

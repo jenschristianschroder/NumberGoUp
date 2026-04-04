@@ -114,6 +114,55 @@ export interface ClaimRewardResponse {
   version: number;
 }
 
+// ─── Create account ──────────────────────────────────────────────────────────
+
+export interface CreateAccountRequest {
+  playerId: string;
+  themeId: string;
+  idempotencyKey: string;
+}
+
+export interface CreateAccountResponse {
+  playerId: string;
+  themeId: string;
+  version: number;
+}
+
+// ─── Themes ──────────────────────────────────────────────────────────────────
+
+export interface GeneratorTemplateDto {
+  id: string;
+  name: string;
+  baseOutput: string; // integer string
+  multiplier: string; // integer string, scaled ×1000
+}
+
+export interface UpgradeTemplateDto {
+  id: string;
+  name: string;
+  description: string;
+  cost: string; // integer string
+  targetGeneratorId?: string;
+  multiplierBonusScaled: string; // integer string, scaled ×1000
+}
+
+export interface ThemeDto {
+  id: string;
+  name: string;
+  description: string;
+  generators: GeneratorTemplateDto[];
+  upgrades: UpgradeTemplateDto[];
+  initialCurrency: string; // integer string
+  prestigeThreshold: string; // integer string
+  maxOfflineSeconds: number;
+}
+
+export interface ThemeSummaryDto {
+  id: string;
+  name: string;
+  description: string;
+}
+
 // ─── Service Bus messages ─────────────────────────────────────────────────────
 
 export type MessageType =
@@ -121,7 +170,8 @@ export type MessageType =
   | 'claim-offline-earnings'
   | 'prestige-reset'
   | 'assign-automation'
-  | 'claim-event-reward';
+  | 'claim-event-reward'
+  | 'create-account';
 
 export interface ServiceBusMessage<T = unknown> {
   type: MessageType;
