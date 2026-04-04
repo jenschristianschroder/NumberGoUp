@@ -56,6 +56,18 @@ jobs:
         working-directory: packages/application
         run: npm test
 
+      - name: Build (contracts)
+        working-directory: packages/contracts
+        run: npm run build
+
+      - name: Build (application)
+        working-directory: packages/application
+        run: npm run build
+
+      - name: Build (infrastructure)
+        working-directory: packages/infrastructure
+        run: npm run build
+
       - name: Typecheck (worker)
         working-directory: apps/worker
         run: npm run typecheck

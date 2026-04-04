@@ -43,7 +43,7 @@ export async function createAccountHandler(
     if (existing.processedIdempotencyKeys.includes(command.idempotencyKey)) {
       return {
         playerId: existing.playerId,
-        themeId: command.themeId,
+        themeId: existing.themeId,
         version: existing.version,
       };
     }
@@ -59,6 +59,7 @@ export async function createAccountHandler(
 
   const account: PlayerAccount = {
     playerId: asPlayerId(command.playerId),
+    themeId: command.themeId,
     run,
     meta: {
       playerId: asPlayerId(command.playerId),
@@ -73,7 +74,7 @@ export async function createAccountHandler(
     updatedAt: now,
   };
 
-  await playerRepo.save(account);
+  await playerRepo.create(account);
 
   return {
     playerId: account.playerId,

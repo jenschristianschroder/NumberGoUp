@@ -8,6 +8,7 @@ import { asPlayerId, asGeneratorId } from '@numbergoUp/domain';
 function makeAccount(): PlayerAccount {
   return {
     playerId: asPlayerId('player-1'),
+    themeId: 'generic',
     run: {
       currency: 0n,
       generators: [
@@ -45,6 +46,7 @@ describe('claimOfflineEarningsHandler', () => {
 
     const repo: PlayerRepository = {
       findById: vi.fn(async () => account),
+      create: vi.fn(),
       save: vi.fn(async (a) => {
         saved = a;
       }),
@@ -74,6 +76,7 @@ describe('claimOfflineEarningsHandler', () => {
 
     const repo: PlayerRepository = {
       findById: vi.fn(async () => account),
+      create: vi.fn(),
       save: vi.fn(),
       hasProcessedKey: vi.fn(async () => false),
     };

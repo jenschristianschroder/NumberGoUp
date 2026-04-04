@@ -57,6 +57,62 @@ export class PostgresPlayerRepository implements PlayerRepository {
     }
   }
 
+  async create(account: PlayerAccount): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `INSERT INTO players (id, theme_id, version, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [account.playerId, account.themeId, account.version, account.createdAt, account.updatedAt],
+      );
+
+      await client.query(
+        `INSERT INTO player_run_state (player_id, currency, last_tick_at, generators, upgrades, automations, active_boosts)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          account.playerId,
+          account.run.currency.toString(),
+          account.run.lastTickAt,
+          JSON.stringify(serializeGenerators(account.run)),
+          JSON.stringify(serializeUpgrades(account.run)),
+          JSON.stringify(serializeAutomations(account.run)),
+          JSON.stringify(serializeBoosts(account.run)),
+        ],
+      );
+
+      await client.query(
+        `INSERT INTO player_meta_progression (player_id, prestige_count, permanent_multiplier_scaled, total_lifetime_earnings)
+         VALUES ($1, $2, $3, $4)`,
+        [
+          account.playerId,
+          account.meta.prestigeCount,
+          account.meta.permanentMultiplierScaled.toString(),
+          account.meta.totalLifetimeEarnings.toString(),
+        ],
+      );
+
+      // Insert idempotency key
+      if (account.processedIdempotencyKeys.length > 0) {
+        const lastKey =
+          account.processedIdempotencyKeys[account.processedIdempotencyKeys.length - 1];
+        await client.query(
+          `INSERT INTO player_idempotency_keys (player_id, key, created_at)
+           VALUES ($1, $2, NOW())`,
+          [account.playerId, lastKey],
+        );
+      }
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
   async save(account: PlayerAccount): Promise<void> {
     const client = await this.pool.connect();
     try {
@@ -217,6 +273,7 @@ function rowToPlayerAccount(row: Record<string, unknown>): PlayerAccount {
 
   return {
     playerId: asPlayerId(row.id as string),
+    themeId: (row.theme_id as string) ?? 'generic',
     run,
     meta,
     claimedRewards,
