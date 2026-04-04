@@ -99,8 +99,8 @@ export class PostgresPlayerRepository implements PlayerRepository {
           account.processedIdempotencyKeys[account.processedIdempotencyKeys.length - 1];
         await client.query(
           `INSERT INTO player_idempotency_keys (player_id, key, created_at)
-           VALUES ($1, $2, NOW())`,
-          [account.playerId, lastKey],
+           VALUES ($1, $2, $3)`,
+          [account.playerId, lastKey, account.createdAt],
         );
       }
 
