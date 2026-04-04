@@ -62,6 +62,8 @@ export interface ResearchNodeDto {
   effects: ResearchEffectDto[];
   branch: string;
   isMilestone: boolean;
+  /** Present when returning a player's research tree (indicates unlock status). */
+  unlocked?: boolean;
 }
 
 export interface ResearchEffectDto {

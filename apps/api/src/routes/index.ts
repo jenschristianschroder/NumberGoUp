@@ -42,7 +42,8 @@ export function registerRoutes(
     if (!account) {
       return reply.status(404).send(errorResponse('PLAYER_NOT_FOUND', 'Player not found', req.id));
     }
-    return reply.send({ data: mapPlayerToDto(account), requestId: req.id });
+    const theme = themeRepo.findById(account.themeId);
+    return reply.send({ data: mapPlayerToDto(account, theme), requestId: req.id });
   });
 
   // ─── Buy upgrade ───────────────────────────────────────────────────────────
@@ -197,7 +198,7 @@ export function registerRoutes(
     }
 
     return reply.status(201).send({
-      data: mapPlayerToDto(account),
+      data: mapPlayerToDto(account, themeRepo.findById(account.themeId)),
       requestId: req.id,
     });
   });

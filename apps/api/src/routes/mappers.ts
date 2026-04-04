@@ -6,7 +6,20 @@ import type {
   ResearchNodeDto,
 } from '@numbergoUp/contracts';
 
-export function mapPlayerToDto(account: PlayerAccount): PlayerStateDto {
+/**
+ * Map a player to a DTO. If a theme is provided, the researchTier is computed
+ * from the theme's milestone nodes. Otherwise it defaults to 0.
+ */
+export function mapPlayerToDto(account: PlayerAccount, theme?: GameTheme): PlayerStateDto {
+  let researchTier = 0;
+  if (theme) {
+    const milestoneNodeIds = theme.researchNodes
+      .filter((n) => n.isMilestone)
+      .map((n) => n.id as string);
+    researchTier = account.meta.research.unlockedNodeIds.filter((id) =>
+      milestoneNodeIds.includes(id as string),
+    ).length;
+  }
   return {
     playerId: account.playerId,
     currency: account.run.currency.toString(),
@@ -35,32 +48,12 @@ export function mapPlayerToDto(account: PlayerAccount): PlayerStateDto {
       research: {
         researchPoints: account.meta.research.researchPoints.toString(),
         unlockedNodeIds: account.meta.research.unlockedNodeIds.map((id) => id.toString()),
-        researchTier: 0, // requires theme context; set below if needed
+        researchTier,
       },
     },
     lastTickAt: account.run.lastTickAt.toISOString(),
     version: account.version,
   };
-}
-
-/**
- * Map a player to DTO with theme context so research tier can be computed.
- */
-export function mapPlayerToDtoWithTheme(
-  account: PlayerAccount,
-  theme: GameTheme | undefined,
-): PlayerStateDto {
-  const dto = mapPlayerToDto(account);
-  if (theme) {
-    const milestoneNodeIds = theme.researchNodes
-      .filter((n) => n.isMilestone)
-      .map((n) => n.id as string);
-    const unlockedMilestones = account.meta.research.unlockedNodeIds.filter((id) =>
-      milestoneNodeIds.includes(id as string),
-    );
-    dto.meta.research.researchTier = unlockedMilestones.length;
-  }
-  return dto;
 }
 
 function mapResearchNodeToDto(node: GameTheme['researchNodes'][number]): ResearchNodeDto {

@@ -35,7 +35,7 @@ export async function prestigeResetHandler(
   command: PrestigeResetCommand,
   repo: PlayerRepository,
   clock: Clock,
-  themeRepo?: ThemeRepository,
+  themeRepo: ThemeRepository,
 ): Promise<PrestigeResetResult> {
   const now = clock.now();
   const account = await repo.findById(command.playerId);
@@ -57,11 +57,9 @@ export async function prestigeResetHandler(
 
   // Determine research points per prestige from theme, fallback to default
   let researchPointsAwarded = DEFAULT_RESEARCH_POINTS_PER_PRESTIGE;
-  if (themeRepo) {
-    const theme = themeRepo.findById(account.themeId);
-    if (theme) {
-      researchPointsAwarded = theme.researchPointsPerPrestige;
-    }
+  const theme = themeRepo.findById(account.themeId);
+  if (theme) {
+    researchPointsAwarded = theme.researchPointsPerPrestige;
   }
 
   const newMeta = computePrestigeBonus(account.meta, researchPointsAwarded);
