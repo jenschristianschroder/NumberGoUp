@@ -56,6 +56,10 @@ jobs:
         working-directory: packages/application
         run: npm test
 
+      - name: Typecheck (worker)
+        working-directory: apps/worker
+        run: npm run typecheck
+
       - name: Test (api)
         working-directory: apps/api
         run: npm test
