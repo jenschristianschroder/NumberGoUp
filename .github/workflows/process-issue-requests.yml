@@ -1,0 +1,158 @@
+name: Process Pending Issue Requests
+
+# Automatically processes JSON files in pending-issues/ and creates GitHub issues.
+# Triggered when JSON files are pushed to main in the pending-issues/ directory.
+# After processing, the JSON files are deleted and the cleanup is committed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pending-issues/*.json'
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  process-issues:
+    name: Process pending issue requests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Process JSON files and create issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const dir = 'pending-issues';
+            const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+
+            if (files.length === 0) {
+              console.log('No pending issue files found.');
+              return;
+            }
+
+            console.log(`Found ${files.length} pending issue file(s).`);
+
+            const created = [];
+            const failed = [];
+
+            for (const file of files) {
+              const filePath = path.join(dir, file);
+              console.log(`\nProcessing: ${file}`);
+
+              try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const issue = JSON.parse(content);
+
+                if (!issue.title) {
+                  console.log(`  ⚠ Skipping ${file}: missing required field "title"`);
+                  failed.push({ file, reason: 'missing title' });
+                  continue;
+                }
+
+                const labels = Array.isArray(issue.labels) ? issue.labels.filter(Boolean) : [];
+                const assignees = Array.isArray(issue.assignees) ? issue.assignees.filter(Boolean) : [];
+
+                let milestone;
+                if (issue.milestone != null) {
+                  const parsed = Number(issue.milestone);
+                  if (Number.isInteger(parsed) && parsed >= 1) {
+                    milestone = parsed;
+                  } else {
+                    console.log(`  ❌ Invalid milestone value: "${issue.milestone}"`);
+                    failed.push({ file, reason: `invalid milestone: "${issue.milestone}"` });
+                    continue;
+                  }
+                }
+
+                const payload = {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issue.title,
+                  ...(issue.body ? { body: issue.body } : {}),
+                  ...(labels.length ? { labels } : {}),
+                  ...(assignees.length ? { assignees } : {}),
+                  ...(milestone ? { milestone } : {}),
+                };
+
+                const { data } = await github.rest.issues.create(payload);
+                console.log(`  ✅ Created issue #${data.number}: ${data.html_url}`);
+                created.push({ file, number: data.number, url: data.html_url });
+              } catch (err) {
+                console.log(`  ❌ Error processing ${file}: ${err.message}`);
+                failed.push({ file, reason: err.message });
+              }
+            }
+
+            // Write job summary
+            let summary = '### Processed Pending Issues\n\n';
+
+            if (created.length > 0) {
+              summary += `**${created.length} issue(s) created:**\n\n`;
+              summary += '| File | Issue | URL |\n|------|-------|-----|\n';
+              for (const c of created) {
+                summary += `| \`${c.file}\` | #${c.number} | ${c.url} |\n`;
+              }
+              summary += '\n';
+            }
+
+            if (failed.length > 0) {
+              summary += `**${failed.length} file(s) failed:**\n\n`;
+              summary += '| File | Reason |\n|------|--------|\n';
+              for (const f of failed) {
+                summary += `| \`${f.file}\` | ${f.reason} |\n`;
+              }
+              summary += '\n';
+            }
+
+            if (created.length === 0 && failed.length === 0) {
+              summary += 'No issues were created.\n';
+            }
+
+            await core.summary.addRaw(summary).write();
+
+            if (failed.length > 0) {
+              core.setFailed(`${failed.length} issue file(s) failed to process.`);
+            }
+
+            // Write the list of successfully processed files so cleanup knows what to delete
+            if (created.length > 0) {
+              const processedList = created.map(c => c.file).join('\n');
+              fs.writeFileSync('pending-issues/.processed', processedList);
+            }
+
+      - name: Clean up processed files
+        if: always()
+        run: |
+          PROCESSED_FILE="pending-issues/.processed"
+          if [ ! -f "$PROCESSED_FILE" ]; then
+            echo "No processed files to clean up."
+            exit 0
+          fi
+
+          # Delete only successfully processed JSON files
+          while IFS= read -r file; do
+            if [ -f "pending-issues/$file" ]; then
+              rm "pending-issues/$file"
+              echo "Deleted: $file"
+            fi
+          done < "$PROCESSED_FILE"
+          rm "$PROCESSED_FILE"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pending-issues/
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
+            echo "No files to clean up."
+          else
+            git commit -m "chore: clean up processed issue requests [skip ci]"
+            git push
+          fi
