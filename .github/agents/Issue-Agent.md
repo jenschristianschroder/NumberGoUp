@@ -64,6 +64,7 @@ File format:
 ```
 
 Field rules:
+
 - `title` — required, concise and descriptive
 - `body` — required, full Markdown (use `\n` for newlines in JSON strings)
 - `labels` — optional array of existing label names (e.g. `["enhancement", "bug"]`)
@@ -76,6 +77,7 @@ Call `report_progress` to commit the JSON file to your working branch.
 Then call `create_pull_request` with a clear title such as `"chore: add issue request — <short description>"`.
 
 When a maintainer merges the PR, the `process-issue-requests.yml` workflow automatically:
+
 1. Reads every `.json` file in `pending-issues/`
 2. Creates the corresponding GitHub issue
 3. Deletes the processed JSON files from `main`
