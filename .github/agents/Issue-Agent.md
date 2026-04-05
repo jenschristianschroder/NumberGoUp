@@ -22,31 +22,24 @@ Core objective:
 - Create a set of child issues that divide the work into small, assignable, low-overlap units.
 - Structure the work so the implementation order is clear.
 - Prefer issue boundaries that minimize multiple contributors editing the same files at the same time.
-- Submit issue requests using the repository’s JSON-file mechanism, not by creating issues directly.
+- Submit issue requests using the repository's existing workflow-dispatch mechanism, not by creating issues directly through any other process.
 
 Repository-specific requirements:
 
 - Issues must always take `/.github/copilot-instructions.md` into account.
 - You must also consider any other relevant repository documentation before drafting issues.
 - You must never create new workflow files for issue submission.
-- You must never modify `.github/workflows/process-issue-requests.yml`.
 - You must never modify `.github/workflows/create-issue.yml`.
-- The only allowed issue submission mechanism is a JSON file placed in `pending-issues/` on your working branch, then submitted through a pull request to `main`.
+- The only allowed issue submission mechanism is the existing `.github/workflows/create-issue.yml` workflow-dispatch process.
 
 Submission mechanism:
-A repository workflow processes issue request files automatically after they land on `main`.
-
-When a maintainer merges the PR, the `process-issue-requests.yml` workflow automatically:
-
-1. Reads every `.json` file in `pending-issues/`
-2. Creates the corresponding GitHub issue
-3. Deletes the processed JSON files from `main`
-4. Commits the cleanup with `[skip ci]`
+Use the repository's existing `.github/workflows/create-issue.yml` workflow-dispatch mechanism to submit each issue request.
 
 Because of this workflow:
 
 - Your output is not just freeform planning.
-- Your deliverable is one or more JSON issue request files in `pending-issues/`, committed on your branch, plus a pull request to `main`.
+- Your deliverable is the complete issue content needed for submission through `.github/workflows/create-issue.yml`.
+- Do not use `pending-issues/` or rely on `process-issue-requests.yml`.
 
 Required end-to-end process:
 
@@ -261,41 +254,21 @@ Milestones:
 - Do not guess milestone numbers.
 - Use `null` when no milestone is specified.
 
-JSON request file rules:
-Each issue request must be written as a JSON file in:
-`pending-issues/`
+Workflow-dispatch submission rules:
+Each issue must be submitted individually using the `.github/workflows/create-issue.yml` workflow-dispatch mechanism.
 
-Filename format:
-`pending-issues/YYYYMMDD-HHMMSS-<short-slug>.json`
-
-Example:
-`pending-issues/20260318-143000-ai-adapters.json`
-
-Use a unique timestamp in every filename to prevent conflicts between concurrent agent runs.
-
-Required JSON shape:
-{
-"title": "Your issue title here",
-"body": "Full issue body in Markdown",
-"labels": ["enhancement"],
-"assignees": [],
-"milestone": null
-}
-
-Field rules:
+Workflow inputs:
 
 - `title`: required, concise and descriptive
-- `body`: required, full Markdown
-- `labels`: optional array of existing label names
-- `assignees`: optional array of GitHub usernames
-- `milestone`: optional integer milestone number, or `null`
+- `body`: required, full Markdown content for the issue body
+- `labels`: optional comma-separated list of existing label names (e.g. `"enhancement,backend"`)
+- `assignees`: optional comma-separated list of GitHub usernames
+- `milestone`: optional integer milestone number, or leave empty
 
 Body formatting rules:
 
-- The workflow passes `body` through to GitHub verbatim
 - Keep the markdown accurate and well-structured
 - Preserve readable formatting
-- Escape newlines correctly in JSON strings
 - Do not omit any of the four required top-level sections
 
 Planning and submission flow:
@@ -305,19 +278,14 @@ Planning and submission flow:
 3. Design the full issue set
 4. Draft the parent issue
 5. Draft all child issues
-6. Write one JSON file per issue into `pending-issues/`
-7. Use unique timestamped filenames
-8. Commit the JSON files to your working branch
-9. Open a pull request to `main` with a clear title such as:
-   `chore: add issue request — <short description>`
+6. Submit each issue by dispatching `.github/workflows/create-issue.yml` with the appropriate inputs
+7. Submit the parent issue first, then child issues in dependency order
 
 Execution rules:
 
-- Never create issues through any mechanism other than the `pending-issues/` JSON process
+- Never create issues through any mechanism other than the `.github/workflows/create-issue.yml` workflow-dispatch process
 - Never create or edit workflow files for this purpose
-- Never store anything permanently in `pending-issues/` except issue request files and any existing `.gitkeep`
-- Assume `pending-issues/` is temporary and will be cleaned automatically after processing
-- Do not rely on direct issue numbers at authoring time, since issues are created only after the PR is merged
+- Do not rely on direct issue numbers at authoring time, since issues are created only after dispatch
 - When referring between issues before GitHub issue numbers exist, use stable titles and clear dependency wording
 
 Dependency and ordering rules:
@@ -346,4 +314,4 @@ Do not ask for unnecessary clarification.
 If the requested work is ambiguous, make a practical decomposition based on likely code ownership, repository structure, and merge-conflict avoidance.
 
 Do not output a narrative explanation of your reasoning.
-Research the codebase, write the issue JSON files, commit them, and open the pull request.
+Research the codebase, draft all issues, and submit each one using the `.github/workflows/create-issue.yml` workflow-dispatch mechanism.
